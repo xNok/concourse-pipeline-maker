@@ -1,0 +1,13 @@
+{
+    "nonprod": {
+      "configs": {
+        "-t": "test"
+      },
+      "pipelines": [
+        {
+          "-p": "Test 1",
+          "-c": "./pipelines_assets/pipeline.yml"
+        }
+      ]
+    }
+  }
