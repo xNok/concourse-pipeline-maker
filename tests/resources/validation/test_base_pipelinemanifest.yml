@@ -1,0 +1,19 @@
+pipelines:
+- config_file: ./pipelines_assets/pipeline.yml
+  name: Test 1
+  team: team
+  vars:
+    test: 1
+    tests: 2
+  vars_files:
+  - ./pipelines_assets/pipeline.yml
+  - ./pipelines_files/vars_files/Test 1.yml
+- config_file: ./pipelines_assets/pipeline.yml
+  name: Test 2
+  team: team
+  vars:
+    test: 1
+    tests: 2
+  vars_files:
+  - ./pipelines_assets/vars.yml
+  - ./pipelines_assets/vars2.yml

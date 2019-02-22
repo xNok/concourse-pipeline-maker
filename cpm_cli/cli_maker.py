@@ -31,8 +31,8 @@ Options-Flags:
 from docopt import docopt
 from shutil import copyfile
 
-from h_colors import *
-from h_utils  import *
+from .h_colors import *
+from .h_utils  import *
 
 # Generer le fichier de configuration des pipelines
 from pipeline_maker.pipeline_config import PipelineConfig
@@ -61,6 +61,10 @@ def main():
     {tag} Use {color} cpm -h {reset} to lear how to use the command line"
     {tag} Use {color} cpm --it {reset} to activate the interactive guide"
     """.format(tag=tag.info,color=fg.green,reset=ft.reset,))
+
+    run(cli_args)
+
+def run(cli_args):
 
     # 0. do we have a pipeline manifest?
     if not os.path.isfile(cli_args["--ifile"]):

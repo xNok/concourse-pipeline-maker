@@ -27,8 +27,7 @@ Options:
   -o <outputfile>, --ofile <outputfile>     Path to the output folder. [default: pipelines_files]
   -p <text_to_search:replacement_text>      Search and replace operation applied before procssing the pipeline manifest.
                                             Very usefull when working locally.
-  -s <sfolder>, --static <sfolder>          When publishing pipelines in a repo make sur it si compatible with concourse/concourse-pipeline-resource [default: ]
-  -d , --dynamic                            When running in a pipeline correct the paths
+  -s <sfolder>, --static <sfolder>          When publishing pipelines in a repo make sur it si compatible with concourse/concourse-pipeline-resource [default: git-infra-res]
 Options-Flags:
   --cli                                     Generate the Fly command line for each pipeline
   --copy                                    Systematically copy the pipeline in the output directory.

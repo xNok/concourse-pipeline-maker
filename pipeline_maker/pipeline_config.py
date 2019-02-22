@@ -1,6 +1,7 @@
 import os, shutil, errno, copy
 import yaml
 import warnings
+from collections import defaultdict
 
 ## Dependences
 from .pipeline_merger import merge_pipeline
@@ -11,16 +12,20 @@ class PipelineConfig(object):
     """Manage the configuration of a pipeline, deal with the read/write operation"""
 
     p_config = {
-            # Advanced Configuration
-            "template": "",
-            "merge": [],
-            # Basic configuration
-            "team": "",
-            "name": "",
-            "config_file": "",
-            "vars_files": [],
-            "vars": [],
-            "partials": []
+        # Basic configuration
+        "team": "",
+        "name": "",
+        "config_file": "",
+        "vars_files": [],
+        "vars": [],
+    }
+
+    p_tools = {
+        # Advanced Configuration
+        "template": "",
+        "merge": [],
+        "partials": [],
+        "cli": ""
     }
 
     def __init__(self, default_config=None, data=None):
@@ -37,20 +42,25 @@ class PipelineConfig(object):
     def read_pipeline_config(self, data):
         """
         Create the PipelineCongig Object for the space.
-        Valid entries: -t,-p,-l,-v,-m
+        Valid entries: -t,-p,-c,-l,-v
+        Valid function: -tpl, -m, -s
         """
+
         self.logger.info("Reading the config")
         self.logger.debug(data)
+        ## Fly cli args
         # Single arguements allowed
-        self.p_config["team"]         = self.get_parameter(data, "-t", "team"       , default=self.p_config["team"])
-        self.p_config["name"]         = self.get_parameter(data, "-p", "pipeline"   , default=self.p_config["name"])
-        self.p_config["config_file"]  = self.get_parameter(data, "-c", "config"     , default=self.p_config["config_file"])
-        self.p_config["template"]     = self.get_parameter(data, "-tpl", "template" , default=self.p_config["template"])
+        self.p_config["team"]         = self.get_parameter(data, "-t", "team")
+        self.p_config["name"]         = self.get_parameter(data, "-p", "pipeline")
+        self.p_config["config_file"]  = self.get_parameter(data, "-c", "config")
         # Multiple arguments allowed
         self.p_config["vars_files"]   += self.get_list_of_paramters(data, "-l", "load-vars-from")
         self.p_config["vars"]         += self.get_list_of_paramters(data, "-v", "var")
-        self.p_config["merge"]        += self.get_list_of_paramters(data, "-m", "merge")
-        self.p_config["partials"]     += self.get_list_of_paramters(data, "-s", "partials")
+
+        ##  Advanced args
+        self.p_tools["template"] = self.get_parameter(data, "-tpl", "template")
+        self.p_tools["merge"]    += self.get_list_of_paramters(data, "-m", "merge")
+        self.p_tools["partials"] += self.get_list_of_paramters(data, "-s", "partials")
 
         return self.p_config
     
@@ -61,7 +71,7 @@ class PipelineConfig(object):
         basepipeline = os.path.basename(self.p_config["config_file"])
 
         # loop for the merge
-        for idx, m in enumerate(self.p_config["merge"]):
+        for idx, m in enumerate(self.p_tools["merge"]):
             out_config_file = out_directory + '/debug_merged/' + self.p_config["name"] + '-' +  str(idx)  + '-' + basepipeline 
             merge_pipeline(m, self.p_config["config_file"], output=out_config_file)
             self.p_config["config_file"]=out_config_file
@@ -99,10 +109,10 @@ class PipelineConfig(object):
 
     def process_partials(self):
 
-        for p in self.p_config["partials"][1:]:
-            self.p_config["merge"].append(self.p_config["config_file"] + p + ".yml")
+        for p in self.p_tools["partials"][1:]:
+            self.p_tools["merge"].append(self.p_config["config_file"] + p + ".yml")
 
-        self.p_config["config_file"] = self.p_config["config_file"] + self.p_config["partials"][0] + ".yml"
+        self.p_config["config_file"] = self.p_config["config_file"] + self.p_tools["partials"][0] + ".yml"
 
     def process_cli(self):
         """provide the fly cli for a given pipeline"""
@@ -118,12 +128,13 @@ class PipelineConfig(object):
 
     ## Utils extract params
     def get(self, key):
-        return self.p_config[key]
+        z = {**self.p_config, **self.p_tools}
+        return z[key]
 
     def set(self, key, value):
         self.p_config[key] = value
 
-    def get_parameter(self, data, flag, name, default=""):
+    def get_parameter(self, data, flag, name):
         """
         Extract a string by flag or name or return default
         """
@@ -132,11 +143,11 @@ class PipelineConfig(object):
         elif  name in data:
             r = data[name]
         else:
-            r = default
+            r = self.get(name)
         
         return r
 
-    def get_list_of_paramters(self, data, flag, name, default=[]):
+    def get_list_of_paramters(self, data, flag, name):
         """
         Extract a list by flag or name, concat with defaul value
         """
@@ -145,6 +156,6 @@ class PipelineConfig(object):
         elif name in data:
             r = data[name] if isinstance(data[name], list) else [data[name]]
         else:
-            r = default
+            r = self.get(name)
             
         return r

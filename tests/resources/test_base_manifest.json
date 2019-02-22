@@ -1,0 +1,20 @@
+{
+    "nonprod": {
+      "pipelines": [
+        {
+          "-t": "team",
+          "-p": "Test 1",
+          "-c": "./pipelines_assets/pipeline.yml",
+          "-l": "./pipelines_assets/pipeline.yml",
+          "-v": ["test=1", "tests=2"]
+        },
+        {
+          "-t": "team",
+          "-p": "Test 2",
+          "-c": "./pipelines_assets/pipeline.yml",
+          "-l": ["./pipelines_assets/vars.yml", "./pipelines_assets/vars2.yml"],
+          "-v": ["test=1", "tests=2"]
+        }
+      ]
+    }
+  }
