@@ -1,0 +1,53 @@
+{
+  "configs": {
+    "-t": "team",
+    "-l": "./pipelines_assets/vars.yml",
+    "-v": {
+      "config": 1
+    }
+  },
+  "templates": {
+    "template1": {
+      "-p": "Test 1",
+      "-c": "./pipelines_assets/pipeline.yml",
+      "-l": "./pipelines_assets/vars-template.yml",
+      "-v": {
+        "test": 1,
+        "tests": 2
+      }
+    }
+  },
+  "pipelines": [
+    {
+      "-p": "Test 1",
+      "-c": "./pipelines_assets/pipeline.yml",
+      "-v": {
+        "test": 1,
+        "tests": 2
+      }
+    },
+    {
+      "-t": "team 2",
+      "-p": "Test 2",
+      "-c": "./pipelines_assets/pipeline.yml",
+      "-l": "./pipelines_assets/vars2.yml",
+      "-v": {
+        "config": 2,
+        "tests": 2
+      }
+    },
+    {
+      "-p": "Test 3",
+      "-tpl": "template1"
+    },
+    {
+      "-p": "Test 4",
+      "-tpl": "template1",
+      "-l": "./pipelines_assets/vars-pipeline.yml",
+      "-v": {
+        "test": 7,
+        "test7": "7"
+      }
+    }
+  ]
+}

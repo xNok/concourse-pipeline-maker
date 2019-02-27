@@ -135,8 +135,9 @@ def run(cli_args):
         # II.2.1 Create pipeline config
         if "template" in p or "-tpl" in p:
             # II.2.2a Templates -> start by applying the right template
-            log.debug("template:" + pipeline_config.get("template"))
-            pipeline_config = PipelineConfig(template_configs[pipeline_config.get("template")], p)
+            template = p["-tpl"] if "-tpl" in p else p["template"]
+            log.debug("template:" + template)
+            pipeline_config = PipelineConfig(template_configs[template], p)
         else:
             # II.2.2b Space config -> start by applying the space config
             pipeline_config = PipelineConfig(space_config, p)

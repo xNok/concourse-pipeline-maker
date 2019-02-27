@@ -115,34 +115,31 @@ L'exemple suivant démontre comment ajouter des fonctionalitè avec l'option de 
 
 ```json
 {
-  "nonprod": {
-    "configs": {
-      "-t": "habitation-achat",
-      "load-vars-from": "./git-infra-res/assets-pipelines/vars-nonproduction.yml"
-    },
-    "templates": {
-      "service-template": {
-        "-p": "service-dummy",
-        "-c": "./git-concourse/01_pipelines/nonprod-service/nonprod-service-pipeline-00.yml",
-        "-m": [
-          "./git-concourse/03_jobs/nonprod-service/slack-override.yml",
-          "./git-concourse/03_jobs/nonprod-service-static-analysis/maven-static-analysis-override.yml",
-          "./git-concourse/03_jobs/nonprod-service-static-analysis/slack-override.yml",
-          "./git-concourse/03_jobs/nonprod-service-test-robot/maven-robot-override.yml",
-          "./git-infra-res/assets-pipelines/nonprod-service-groups.yml"
-        ]
+  "configs": {
+    "-t": "team",
+    "-l": "./pipelines_assets/vars-configs.yml",
+    "-v": {
+      "config": 1
+    }
+  },
+  "templates": {
+    "template": {
+      "-c": "./pipelines_assets/pipeline.yml",
+      "-l": "./pipelines_assets/vars-template.yml",
+      "-v": {
+        "test": 1,
+        "tests": 2
       }
-    },
-    "pipelines": [
-      {
-        "-p": "service-dummy",
-        "-m": "tpl",
-        "var": [
-          "artifact_id=service-dummy",
-          "repo_id=service-dummy"
-        ]
+    }
+  },
+  "pipelines": [
+    {
+      "-p": "Test",
+      "-tpl": "template",
+      "-v": {
+        "test": 7
       }
-    ]
-  }
+    }
+  ]
 }
 ```
