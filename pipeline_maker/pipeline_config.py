@@ -68,19 +68,27 @@ class PipelineConfig(object):
     def process_to_be_merged(self, out_directory="./"):
         """Loop over the merge array and merge together file in order"""
         self.logger.info("Merging option")
-        basepipeline = os.path.basename(self.p_config["config_file"])
+
+        with open(self.p_config["config_file"]) as fp:
+            m_source = yaml.load(fp)
 
         # loop for the merge
-        for idx, m in enumerate(self.p_tools["merge"]):
-            out_config_file = out_directory + '/debug_merged/' + self.p_config["name"] + '-' +  str(idx)  + '-' + basepipeline 
-            merge_pipeline(m, self.p_config["config_file"], output=out_config_file)
-            self.p_config["config_file"]=out_config_file
+        for  m in self.p_tools["merge"]:
+            with open(m) as fp:
+                m_destination = yaml.load(fp)
+ 
+            m_source = merge_pipeline(m_source, m_destination)
+
+        print(m_source)
 
         out_merged = out_directory +'/config_files/' + self.p_config["name"] + ".yml"
 
         if not os.path.exists(out_directory + "/config_files/"):
             os.mkdir(out_directory + "/config_files/")
-        shutil.move(out_config_file, out_merged)
+        
+        with open(out_merged, 'w+') as fp:
+            yaml.dump(m_source, fp, default_flow_style=False)
+
 
         self.p_config["config_file"] = out_merged
 
