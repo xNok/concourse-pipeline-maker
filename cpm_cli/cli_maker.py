@@ -154,7 +154,7 @@ def run(cli_args):
 
         ## II.2.4 Merging -> modify the pipeline config
         if pipeline_config.get("merge"):
-            log.debug("merge:" + pipeline_config.get("merge"))
+            log.debug("merge:" + str(pipeline_config.get("merge")))
             try:
                 pipeline_config.process_to_be_merged(out_directory=cli_args["--ofile"])
             except IOError as e:

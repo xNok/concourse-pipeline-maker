@@ -74,15 +74,15 @@ class Test:
         #assert filecmp.cmp(manifest, manifest_validation)
         assert manifest["generated"].read() == manifest["expected"].read()
 
-    # @pytest.mark.parametrize("manifest", [("test_merge")], indirect=True)
-    # def test_merge(self, tmpdir, manifest):
-    #     """
-    #     Given fly cli arguments, generate: 
-    #     1. pipelinemanifest.yml
-    #     """
+    @pytest.mark.parametrize("manifest", [("test_adv_merge")], indirect=True)
+    def test_merge(self, tmpdir, manifest):
+        """
+        Given fly cli arguments, generate: 
+        1. pipelinemanifest.yml
+        """
 
-    #     cpm(self.cli_args)
+        cpm(self.cli_args)
 
-    #     assert os.path.isfile(manifest["generated"])
-    #     #assert filecmp.cmp(manifest, manifest_validation)
-    #     assert manifest["generated"].read() == manifest["expected"].read()
+        assert os.path.isfile(manifest["generated"])
+        #assert filecmp.cmp(manifest, manifest_validation)
+        assert manifest["generated"].read() == manifest["expected"].read()

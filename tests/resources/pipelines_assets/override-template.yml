@@ -1,0 +1,6 @@
+resources:
+- name: my-resource
+  type: git
+  source:
+    branch: template
+    uri: https://github.com/pivotalservices/concourse-pipeline-samples.git
