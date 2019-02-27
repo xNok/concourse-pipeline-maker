@@ -4,6 +4,7 @@ from shutil import copytree
 import filecmp
 import difflib
 import os
+
 from cpm_cli.cli_maker import run as cpm
 
 ###
@@ -13,13 +14,17 @@ from cpm_cli.cli_maker import run as cpm
 ###
 
 
-@pytest.fixture()
-def before(tmpdir, request):
+@pytest.fixture
+def manifest(tmpdir, request):
+
+    if request.param:
+        test_name = request.param
+    else:
+        test_name = request.node.name
+
 
     filepath = request.module.__file__
     test_dir, f = os.path.split(filepath)
-    test_file, ext = os.path.splitext(f)
-    test_name = request.node.name
 
     # Resolve paths
     resources = os.path.join(test_dir, "resources")
@@ -35,31 +40,67 @@ def before(tmpdir, request):
     # We work in temps dir
     os.chdir(tmpdir)
 
-    print('\nbefore each test')
+    manifest = tmpdir.join('./pipelines_files/pipelinemanifest.yml')
+    manifest_validation = tmpdir.join('./validation_pipelinemanifest.yml')
+
+    return {"generated": manifest, "expected": manifest_validation}
  
-@pytest.mark.usefixtures("before")
 class Test:
 
-    def test_base(self, tmpdir):
-        cli_args= {
-            "--cli": False,
-            "--copy": False,
-            "--debug": False,
-            "--help": False,
-            "--ifile": "pipelinemanifest.json",
-            "--it": False,
-            "--ofile": "./pipelines_files",
-            "--prod": False,
-            "--static": "",
-            "-p": [],
-            "<pipeline_name>": []
-        }
+    cli_args= {
+        "--cli": False,
+        "--copy": False,
+        "--debug": False,
+        "--help": False,
+        "--ifile": "pipelinemanifest.json",
+        "--it": False,
+        "--ofile": "./pipelines_files",
+        "--prod": False,
+        "--static": "",
+        "-p": [],
+        "<pipeline_name>": []
+    }
+
+    @pytest.mark.parametrize("manifest", [("test_base")], indirect=True)
+    def test_base(self, tmpdir, manifest):
+        """
+        Given fly cli arguments, generate: 
+        1. pipelinemanifest.yml
+        """
+
+        cpm(self.cli_args)
+
+        assert os.path.isfile(manifest["generated"])
+        #assert filecmp.cmp(manifest, manifest_validation)
+        assert manifest["generated"].read() == manifest["expected"].read()
+
+    @pytest.mark.parametrize("manifest", [("test_base_config")], indirect=True)
+    def test_base_config(self, tmpdir, manifest):
+        """
+        A config section can be use as a boilerplate for all pipeline 
+        """
+
+        cpm(self.cli_args)
+
+        assert os.path.isfile(manifest["generated"])
+        assert manifest["generated"].read() == manifest["expected"].read()
+
+    @pytest.mark.parametrize("manifest", [("test_base_config")], indirect=True)
+    def test_base_cli(self, tmpdir, manifest):
+        """
+        argument --cli
+        generate set_{pipeline}.cmd
+        """
+
+        cli_args = self.cli_args.copy()
+
+        cli_args["--cli"] = True
 
         cpm(cli_args)
 
-        manifest =  tmpdir.join('./pipelines_files/pipelinemanifest.yml')
-        manifest_validation = tmpdir.join('./validation_pipelinemanifest.yml')
+        assert os.path.isfile(manifest["generated"])
+        assert manifest["generated"].read() == manifest["expected"].read()
 
-        assert os.path.isfile(manifest)
-        #assert filecmp.cmp(manifest, manifest_validation)
-        assert manifest.read() == manifest_validation.read()
+        assert os.path.isfile(tmpdir.join('./fly_cli/Test 1.cmd'))
+        assert os.path.isfile(tmpdir.join('./fly_cli/Test 2.cmd'))
+

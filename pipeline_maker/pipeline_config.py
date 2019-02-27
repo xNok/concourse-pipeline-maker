@@ -1,7 +1,6 @@
 import os, shutil, errno, copy
 import yaml
 import warnings
-from collections import defaultdict
 
 ## Dependences
 from .pipeline_merger import merge_pipeline
@@ -11,29 +10,30 @@ import logging
 class PipelineConfig(object):
     """Manage the configuration of a pipeline, deal with the read/write operation"""
 
-    p_config = {
-        # Basic configuration
-        "team": "",
-        "name": "",
-        "config_file": "",
-        "vars_files": [],
-        "vars": [],
-    }
-
-    p_tools = {
-        # Advanced Configuration
-        "template": "",
-        "merge": [],
-        "partials": [],
-        "cli": ""
-    }
-
-    def __init__(self, default_config=None, data=None):
+    def __init__(self, default=None, data=None):
         self.logger = logging.getLogger(__name__)
         self.logger.addHandler(logging.StreamHandler())
 
-        if default_config:
-            self.p_config = copy.deepcopy(default_config)
+        if default:
+            self.p_config = copy.deepcopy(default.p_config)
+            self.p_tools = copy.deepcopy(default.p_tools)
+        else:
+            self.p_config = {
+                # Basic configuration
+                "team": "",
+                "name": "",
+                "config_file": "",
+                "vars_files": [],
+                "vars": {},
+            }
+
+            self.p_tools = {
+                # Advanced Configuration
+                "template": "",
+                "merge": [],
+                "partials": [],
+                "cli": ""
+            }
         
         if data:
             self.p_config = self.read_pipeline_config(data)
@@ -51,16 +51,16 @@ class PipelineConfig(object):
         ## Fly cli args
         # Single arguements allowed
         self.p_config["team"]         = self.get_parameter(data, "-t", "team")
-        self.p_config["name"]         = self.get_parameter(data, "-p", "pipeline")
-        self.p_config["config_file"]  = self.get_parameter(data, "-c", "config")
+        self.p_config["name"]         = self.get_parameter(data, "-p", "pipeline", "name")
+        self.p_config["config_file"]  = self.get_parameter(data, "-c", "config", "config_file")
         # Multiple arguments allowed
-        self.p_config["vars_files"]   += self.get_list_of_paramters(data, "-l", "load-vars-from")
-        self.p_config["vars"]         += self.get_list_of_paramters(data, "-v", "var")
+        self.p_config["vars_files"]   = self.get_list_of_paramters(data, "-l", "load-vars-from", "vars_files")
+        self.p_config["vars"]         = self.get_list_of_paramters(data, "-v", "var", "vars")
 
         ##  Advanced args
-        self.p_tools["template"] = self.get_parameter(data, "-tpl", "template")
-        self.p_tools["merge"]    += self.get_list_of_paramters(data, "-m", "merge")
-        self.p_tools["partials"] += self.get_list_of_paramters(data, "-s", "partials")
+        self.p_tools["template"]      = self.get_parameter(data, "-tpl", "template")
+        self.p_tools["merge"]         = self.get_list_of_paramters(data, "-m", "merge")
+        self.p_tools["partials"]      = self.get_list_of_paramters(data, "-s", "partials")
 
         return self.p_config
     
@@ -86,27 +86,6 @@ class PipelineConfig(object):
 
         return out_merged
 
-    def process_vars(self, out_directory="./"):
-
-        self.logger.info("Var option unabled - Creating a var file")
-
-        vars_ = dict([v.split('=') for v in self.p_config["vars"]])
-        vars_path  = out_directory + '/vars_files/' + self.p_config["name"] +'.yml'
-
-        self.logger.debug(yaml.safe_dump(vars_, default_flow_style=False))
-
-        if not os.path.exists(os.path.dirname(vars_path)):
-            try:
-                os.makedirs(os.path.dirname(vars_path))
-            except OSError as exc: # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
-        
-        with open(vars_path, 'w') as outfile:
-            yaml.safe_dump(vars_, outfile, default_flow_style=False)
-        
-        self.p_config["vars_files"] += [vars_path]
-
     def process_partials(self):
 
         for p in self.p_tools["partials"][1:]:
@@ -114,15 +93,31 @@ class PipelineConfig(object):
 
         self.p_config["config_file"] = self.p_config["config_file"] + self.p_tools["partials"][0] + ".yml"
 
-    def process_cli(self):
+    def process_cli(self, out_directory="./"):
         """provide the fly cli for a given pipeline"""
+
         fly = "fly -t " + self.p_config["team"] + " set-pipeline" \
                                 + " -p " + self.p_config["name"] \
                                 + " -c "  + self.p_config["config_file"] \
                                 + " ".join([" -l "  + l for l in self.p_config["vars_files"]]) \
-                                + " ".join([" --var " + var for var in self.p_config["vars"]])
+                                + " ".join([" --var " + k + "=" + str(v) for k,v in self.flatten(self.p_config["vars"]).items()])
 
-        self.p_config["cli"] = fly
+        self.p_tools["cli"] = fly
+
+        out_directory = out_directory + '/fly_cli/'
+
+        if not os.path.exists(out_directory):
+            os.mkdir(out_directory)
+
+        # Write output
+        with open(out_directory + self.p_config["name"] + ".cmd", 'w+') as outfile:
+            outfile.write("cd /d %~dp0")
+            outfile.write('\n')
+            outfile.write('cd ..')
+            outfile.write('\n')
+            outfile.write(fly)
+            outfile.write('\n')
+            outfile.write("pause")
 
         return fly
 
@@ -134,28 +129,50 @@ class PipelineConfig(object):
     def set(self, key, value):
         self.p_config[key] = value
 
-    def get_parameter(self, data, flag, name):
+    def get_parameter(self, data, flag, name, alias=None):
         """
         Extract a string by flag or name or return default
         """
+
+        if alias is None: alias = name
+
         if flag in data:
             r = data[flag]
         elif  name in data:
             r = data[name]
         else:
-            r = self.get(name)
+            r = self.get(alias)
         
         return r
 
-    def get_list_of_paramters(self, data, flag, name):
+    def get_list_of_paramters(self, data, flag, name, alias=None):
         """
         Extract a list by flag or name, concat with defaul value
         """
+        if alias is None: alias = name
+        r = self.get(alias)
+
         if flag in data:
-            r = data[flag] if isinstance(data[flag], list) else [data[flag]]
+            _r = data[flag] if not isinstance(data[flag], str) else [data[flag]]
         elif name in data:
-            r = data[name] if isinstance(data[name], list) else [data[name]]
+            _r = data[name] if not isinstance(data[name], str) else [data[name]]
         else:
-            r = self.get(name)
+            _r = None
+
+        if _r is not None:
+            if isinstance(r, dict):
+                r = {**r, **_r}
+            else:
+                r = r + _r
             
         return r
+
+    def flatten(self, d, parent_key='', sep='.'):
+        items = []
+        for k, v in d.items():
+            new_key = parent_key + sep + k if parent_key else k
+            try:
+                items.extend(self.flatten(v, new_key, sep=sep).items())
+            except:
+                items.append((new_key, v))
+        return dict(items)

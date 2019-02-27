@@ -34,6 +34,8 @@ from shutil import copyfile
 from .h_colors import *
 from .h_utils  import *
 
+import logging
+
 # Generer le fichier de configuration des pipelines
 from pipeline_maker.pipeline_config import PipelineConfig
 
@@ -65,6 +67,16 @@ def main():
     run(cli_args)
 
 def run(cli_args):
+
+    # Set the log level
+    log = logging.getLogger(__name__)
+    log.handlers = []
+    ch = logging.StreamHandler()
+    log.addHandler(ch)
+    if cli_args["--debug"]:
+        log.setLevel(logging.DEBUG)
+    else:
+        log.setLevel(logging.INFO)
 
     # 0. do we have a pipeline manifest?
     if not os.path.isfile(cli_args["--ifile"]):
@@ -100,7 +112,7 @@ def run(cli_args):
     # I Parsing the pipeline manifest
     print("Processing %s" % str(cli_args["--ifile"]))
 
-    env = "prod"if cli_args["--prod"] else "nonprod"
+    env = "prod" if cli_args["--prod"] else "nonprod"
     with open(cli_args["--ifile"]) as f:
         pipelinemanifest = json.load(f)[env]
         
@@ -119,45 +131,43 @@ def run(cli_args):
     if "configs" in pipelinemanifest:
         print(tag.info, "Space config found", ft.reset)
         space_config.read_pipeline_config(pipelinemanifest["configs"])
+        log.debug(space_config.p_config)
 
     template_configs = {}
     if "templates" in pipelinemanifest:
         print(tag.info, "%s Templates found" % len(pipelinemanifest["templates"]))
         print(", ".join(pipelinemanifest["templates"].keys()))
         for tpl in pipelinemanifest["templates"]:
-            template_configs[tpl] = PipelineConfig(
-                default_config=copy.deepcopy(space_config.p_config),
-                data=pipelinemanifest["templates"][tpl])
+            template_configs[tpl] = PipelineConfig(space_config, pipelinemanifest["templates"][tpl])
 
     # II.2. Read the configuration for each pipeline
     print(tag.info, "%s Pipelines found" % len(pipelinemanifest["pipelines"]))
     for p in pipelinemanifest["pipelines"]:
+        
         # II.2.1 Create pipeline config
-        p_config = PipelineConfig(
-                default_config=space_config.p_config,
-                data=p)
+        if "template" in p or "-tpl" in p:
+            # II.2.2a Templates -> start by applying the right template
+            log.debug("template:" + pipeline_config.get("template"))
+            pipeline_config = PipelineConfig(template_configs[pipeline_config.get("template")], p)
+        else:
+            # II.2.2b Space config -> start by applying the space config
+            pipeline_config = PipelineConfig(space_config, p)
 
-        if cli_args["<pipeline_name>"] and p_config.get("name") not in cli_args["<pipeline_name>"]:
+        log.debug(pipeline_config.get("name"))
+        log.debug(pipeline_config.p_config)
+        if cli_args["<pipeline_name>"] and pipeline_config.get("name") not in cli_args["<pipeline_name>"]:
             continue
 
-        # II.2.2 Templates -> restart by applying the right template
-        if p_config.get("template"):
-            p_config = PipelineConfig(
-                default_config=template_configs[p_config.get("template")].p_config,
-                data=p)
-
-        ## II.2.3 Variables -> create a file with all variables
-        if p_config.get("vars"):
-           p_config.process_vars(out_directory=cli_args["--ofile"])
-
         ## III.2.3 Partials -> merge all the partials into one file
-        if p_config.get("partials"):
-            p_config.process_partials()
+        if pipeline_config.get("partials"):
+            log.debug("partials:" + pipeline_config.get("partials"))
+            pipeline_config.process_partials()
 
         ## II.2.4 Merging -> modify the pipeline config
-        if p_config.get("merge"):
+        if pipeline_config.get("merge"):
+            log.debug("merge:" + pipeline_config.get("merge"))
             try:
-                p_config.process_to_be_merged(out_directory=cli_args["--ofile"])
+                pipeline_config.process_to_be_merged(out_directory=cli_args["--ofile"])
             except IOError as e:
                 print(fg.red, "Error: File does not appear to exist.", ft.reset)
                 print(e)
@@ -165,18 +175,19 @@ def run(cli_args):
                 continue
 
         ## II.2.5 Copy (optional) -> copy les fichiers dans le dossier output
-        if cli_args["--copy"] or cli_args["--static"] != "":
-            outputfile = cli_args["--ofile"] + "/config_files/" + p_config.get("name") + ".yml"
+        if cli_args["--copy"]:
+            log.debug("** copy files")
+            outputfile = cli_args["--ofile"] + "/config_files/" + pipeline_config.get("name") + ".yml"
 
             # config_file
             if not os.path.exists(cli_args["--ofile"] + "/config_files/"):
                 os.mkdir(cli_args["--ofile"] + "/config_files/")
                 
-            copyfile(p_config.get("config_file"), outputfile)
-            p_config.set("config_file", outputfile)
+            copyfile(pipeline_config.get("config_file"), outputfile)
+            pipeline_config.set("config_file", outputfile)
             # vars_files
             vars_files = []
-            for f in p_config.get("vars_files"):
+            for f in pipeline_config.get("vars_files"):
                 outputfile =  cli_args["--ofile"] + "/vars_files/" + os.path.basename(f)
 
                 if not os.path.exists(cli_args["--ofile"] + "/vars_files/"):
@@ -184,19 +195,20 @@ def run(cli_args):
                 
                 copyfile(f, outputfile)
                 vars_files.append(outputfile)
-            p_config.set("vars_files", vars_files)
+            pipeline_config.set("vars_files", vars_files)
    
         ## II.2.6 Cli (optionnal) -> generate the cli
-        if cli_args["--cli"] or p_config.get("name") in cli_args["<pipeline_name>"]:
-            p_config.process_cli()
+        if cli_args["--cli"]:
+            log.debug("** gen cli")
+            pipeline_config.process_cli()
 
         # 3.3 Save the pipeline
-        print(fg.green, "Ajout de " + p_config.get("name") + " au pipelinemanifest.yml", ft.reset)
-        pipelines_file["pipelines"].append(p_config.p_config)
+        print(fg.green, "Ajout de " + pipeline_config.get("name") + " au pipelinemanifest.yml", ft.reset)
+        pipelines_file["pipelines"].append(pipeline_config.p_config)
 
-        if p_config.get("name") in cli_args["<pipeline_name>"]:
+        if pipeline_config.get("name") in cli_args["<pipeline_name>"]:
             print("\n\n" + fg.blue + "***** Setup your new pipeline *****" + ft.reset)
-            print(p_config.get("cli"))
+            print(pipeline_config.get("cli"))
 
     print("")
     print(ft.underline + bg.green + fg.white + "  Le Ficher pipelinemanifest.yml est prêt  " + ft.reset)
