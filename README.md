@@ -38,25 +38,6 @@ Options-Flags:
   -h, --help                                Show the help screen.
 ```
 
-
-## Definition des pipelines par environnemnet
-
-Pour Chaque environnemnet de de dévelopement, créer un object JSON detaillant la configuration et la liste des pipelines
-
-```json
-{
-  "nonprod":{
-    "configs": {},
-    "pipelines":[]
-  },
-  "prod":{
-    "configs": {},
-    "pipelines":[]
-  }
-}
-
-```
-
 ## Définition des Pipelines
 
 Pour definir les pipelines utiliser un objet JSON et definir les flag de la commande `fly` ainsi que leurs parametres.
@@ -76,17 +57,15 @@ Se traduit dans le fichier de configuration de la manière suivante:
 
 ```json
 {
-  "nonprod":{
-    "configs": {},
-    "templates": {},
-    "pipelines":[
-      {"-p": "service-dummy",
-       "-c": "pipelines/nonprod-services-pipeline.yml",
-       "load-vars-from": "vars/vars-nonproduction.yml",
-       "var": ["artifact_id=service-dummy", "repo_id=service-dummy"]
-      }
-    ]
-  }
+  "configs": {},
+  "templates": {},
+  "pipelines":[
+    {"-p": "service-dummy",
+      "-c": "pipelines/services-pipeline.yml",
+      "load-vars-from": "vars/vars-dev.yml",
+      "var": {"artifact_id": "service-dummy", "repo_id": "service-dummy"}
+    }
+  ]
 }
 ```
 
@@ -122,9 +101,11 @@ I wanna generate and set pipelines locally:
 cpm
 # Process only 1 pipeline and give me the fly command to execute
 cpm my_pipilene
+# Process all pipeline and generate the fly_cli command line
+cpm --cli
 # Process all pipeline and copy all files in the output folder
-cpm my_pipeline --copy
-# My pipeline are in an other location and i use a generic name for it
+cpm --copy
+# My pipeline are in an other location and I use a generic name for it
 cpm -p alias:path/to/the/folder
 ```
 

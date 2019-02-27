@@ -20,10 +20,7 @@ Options:
 Options-Flags:
   --cli                                     Generate the Fly command line for each pipeline
   --copy                                    Systematically copy the pipeline in the output directory.
-  --prod                                    Process the prod section of the pipeline manifest instead of the nonprod
   --debug                                   Set the log level to debug
-  --it                                      Interactive mode
-
   -h, --help                                Show the help screen.
 """
 
@@ -81,14 +78,6 @@ def run(cli_args):
     # 0. do we have a pipeline manifest?
     if not os.path.isfile(cli_args["--ifile"]):
         print(tag.warn, "Pipeline Manifest not found. %s" % cli_args["--ifile"])
-        # 0N. Are we in interactive mode?
-        if not cli_args["--it"]: exit(1)
-
-        # interactive command function
-        print(tag.question, """Do ou wanna create Pipeline Manifest?
-        Yes) I would love you do that for me
-        No) But i can tell you where to find it
-        """)
 
     # 1. Apply scripts according to arguments
     ## --ofile argument
@@ -112,9 +101,8 @@ def run(cli_args):
     # I Parsing the pipeline manifest
     print("Processing %s" % str(cli_args["--ifile"]))
 
-    env = "prod" if cli_args["--prod"] else "nonprod"
     with open(cli_args["--ifile"]) as f:
-        pipelinemanifest = json.load(f)[env]
+        pipelinemanifest = json.load(f)
         
     print("")
     print("This is what we gonna do:")
