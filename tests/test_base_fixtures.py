@@ -122,5 +122,3 @@ class Test:
 
         assert os.path.isfile(tmpdir.join('./pipelines_files/config_files/Test 1.yml'))
         assert os.path.isfile(tmpdir.join('./pipelines_files/config_files/Test 2.yml'))
-
-

@@ -23,7 +23,5 @@ def test_list_override():
     }
 
     merge_pipeline(b,n)
-
-    print(b)
-
+    
     assert b == v

@@ -86,3 +86,19 @@ class Test:
         assert os.path.isfile(manifest["generated"])
         #assert filecmp.cmp(manifest, manifest_validation)
         assert manifest["generated"].read() == manifest["expected"].read()
+
+    @pytest.mark.parametrize("manifest", [("test_adv_config_replace")], indirect=True)
+    def test_base_replace(self, tmpdir, manifest):
+        """
+        argument --cli
+        generate set_{pipeline}.cmd
+        """
+
+        cli_args = self.cli_args.copy()
+
+        cli_args["-p"] = ["concourse:pipelines_assets"]
+
+        cpm(cli_args)
+
+        assert os.path.isfile(manifest["generated"])
+        assert manifest["generated"].read() == manifest["expected"].read()

@@ -16,7 +16,7 @@ Options:
   -o <outputfile>, --ofile <outputfile>     Path to the output folder. [default: ./pipelines_files]
   -p <text_to_search:replacement_text>      Search and replace operation applied before procssing the pipeline manifest.
                                             Very usefull when working locally.
-  -s <sfolder>, --static <sfolder>          When publishing pipelines in a repo make sur it si compatible with concourse/concourse-pipeline-resource [default: git-infra-res/]
+  -c <sfolder>, --ci <sfolder>              When publishing pipelines in a repo make sure it is compatible with concourse/concourse-pipeline-resource [default: git-infra-res/]
 Options-Flags:
   --cli                                     Generate the Fly command line for each pipeline
   --copy                                    Systematically copy the pipeline in the output directory.
@@ -29,7 +29,6 @@ from docopt import docopt
 from shutil import copyfile
 
 from .h_colors import *
-from .h_utils  import *
 
 import logging
 
@@ -41,6 +40,7 @@ import copy
 import sys, os
 import os.path
 import errno
+import fileinput
 
 def main():
     ################################################################################################
@@ -86,11 +86,10 @@ def run(cli_args):
         print("")
         os.makedirs(cli_args["--ofile"])
 
-    ## -p arguments
+    ## -p arguments, replace to resolve local path
     if cli_args["-p"]:
-        print(fg.orange, "Processing <text_to_search:replacement_text>", ft.reset)
-        preprocessing(cli_args["--ifile"],cli_args["-p"])
-        print(fg.blue,"Your original pipeline manifest has been saved as: " + cli_args["--ifile"] + ".bak",ft.reset)
+        print(fg.orange, "Activate replacement <text_to_search:replacement_text> ", ft.reset)
+        print(json.dumps(cli_args["-p"], sort_keys=True, indent=4))
     else:
         print(tag.info, "Locally use " + fg.green + "cpm -p <text_to_search:replacement_text>" + ft.reset + " to correct the paths in the pipelinemanifest.json")
 
@@ -100,6 +99,12 @@ def run(cli_args):
 
     # I Parsing the pipeline manifest
     print("Processing %s" % str(cli_args["--ifile"]))
+
+    if cli_args["-p"]:
+        with fileinput.FileInput(cli_args["--ifile"], inplace=True) as file:
+            for line in file:
+                for p in cli_args["-p"]:
+                    print(line.replace(p.split(":")[0], p.split(":")[1]), end='')
 
     with open(cli_args["--ifile"]) as f:
         pipelinemanifest = json.load(f)
@@ -209,24 +214,8 @@ def run(cli_args):
     with open(cli_args["--ofile"]+'/pipelinemanifest.yml', 'w') as outfile:
         yaml.safe_dump(pipelines_file, outfile, default_flow_style=False)
 
-    ################################################################################################
-    #### Post-processing
-    ################################################################################################
-
-    # Revert the preprocessing
     if cli_args["-p"]:
-        preprocessing(cli_args["--ifile"],cli_args["-p"], reverte=True)
-        print(fg.blue + "Your original pipeline manifest has been restored: " + cli_args["--ifile"] + ft.reset)
-        print("The original output has been saved: " + cli_args["--ifile"] + ".back")
-
-        print(fg.orange + "Post-Processing <text_to_search:replacement_text>" + ft.reset)
-        preprocessing(cli_args["--ofile"]+'/pipelinemanifest.yml',cli_args["-p"], reverte=True)
-        print(fg.blue + "Your output has been post-processed: " + cli_args["--ofile"] +'/pipelinemanifest.yml' + ft.reset)
-        print("The original output has been saved: " + cli_args["--ofile"] +'/pipelinemanifest.yml' + ".back")
-
-    # Post processing pour les pipelines
-    if cli_args["--static"]:
-        s_outputfile = cli_args["--ofile"] + '/pipelinemanifest-infra-static.yml'
-        p = ["./:" + cli_args["--static"]]
-        copyfile(cli_args["--ofile"] + '/pipelinemanifest.yml', s_outputfile)
-        preprocessing(s_outputfile, p, backup=False)
+        with fileinput.FileInput([cli_args["--ifile"],cli_args["--ofile"]+'/pipelinemanifest.yml'] , inplace=True) as file:
+            for line in file:
+                for p in cli_args["-p"]:
+                    print(line.replace(p.split(":")[1], p.split(":")[0]), end='')

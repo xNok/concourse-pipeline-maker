@@ -79,8 +79,6 @@ class PipelineConfig(object):
  
             m_source = merge_pipeline(m_source, m_destination)
 
-        print(m_source)
-
         out_merged = out_directory +'/config_files/' + self.p_config["name"] + ".yml"
 
         if not os.path.exists(out_directory + "/config_files/"):

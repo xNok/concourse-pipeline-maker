@@ -1,0 +1,55 @@
+{
+  "configs": {
+    "-t": "team",
+    "-l": "./concourse/vars.yml",
+    "-v": {
+      "config": 1
+    }
+  },
+  "templates": {
+    "template1": {
+      "-p": "Test 1",
+      "-c": "./concourse/pipeline.yml",
+      "-l": "./concourse/vars-template.yml",
+      "-m": "./concourse/override-template.yml",
+      "-v": {
+        "test": 1,
+        "tests": 2
+      }
+    }
+  },
+  "pipelines": [
+    {
+      "-p": "Test 1",
+      "-c": "./concourse/pipeline.yml",
+      "-v": {
+        "test": 1,
+        "tests": 2
+      }
+    },
+    {
+      "-t": "team 2",
+      "-p": "Test 2",
+      "-c": "./concourse/pipeline.yml",
+      "-l": "./concourse/vars2.yml",
+      "-v": {
+        "config": 2,
+        "tests": 2
+      }
+    },
+    {
+      "-p": "Test 3",
+      "-tpl": "template1"
+    },
+    {
+      "-p": "Test 4",
+      "-tpl": "template1",
+      "-l": "./concourse/vars-pipeline.yml",
+      "-m": "./concourse/override-pipeline.yml",
+      "-v": {
+        "test": 7,
+        "test7": "7"
+      }
+    }
+  ]
+}
