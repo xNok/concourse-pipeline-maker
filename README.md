@@ -20,21 +20,17 @@ Usage:
   cpm <pipeline_name>... [--ifile <inputfile>] [--ofile <outputfile>] 
     [-p <text_to_search:replacement_text>...] [options]
   cpm -h | --help
-  cpm --it
 
 Options:                         
   -i <inputfile>, --ifile <inputfile>       Path to the pipeline manifest. [default: pipelinemanifest.json]
   -o <outputfile>, --ofile <outputfile>     Path to the output folder. [default: pipelines_files]
   -p <text_to_search:replacement_text>      Search and replace operation applied before procssing the pipeline manifest.
                                             Very usefull when working locally.
-  -s <sfolder>, --static <sfolder>          When publishing pipelines in a repo make sur it si compatible with concourse/concourse-pipeline-resource [default: git-infra-res]
+  -c <sfolder>, --ci <sfolder>              When publishing pipelines in a repo make sure it is compatible with concourse/concourse-pipeline-resource [default: git-infra-res/]
 Options-Flags:
   --cli                                     Generate the Fly command line for each pipeline
   --copy                                    Systematically copy the pipeline in the output directory.
-  --prod                                    Process the prod section of the pipeline manifest instead of the nonprod
   --debug                                   Set the log level to debug
-  --it                                      Interactive mode
-
   -h, --help                                Show the help screen.
 ```
 

@@ -48,15 +48,13 @@ def manifest(tmpdir, request):
 class Test:
 
     cli_args= {
+        "--ci": None,
         "--cli": False,
         "--copy": False,
         "--debug": False,
         "--help": False,
         "--ifile": "pipelinemanifest.json",
-        "--it": False,
         "--ofile": "./pipelines_files",
-        "--prod": False,
-        "--static": "",
         "-p": [],
         "<pipeline_name>": []
     }

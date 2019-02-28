@@ -48,15 +48,13 @@ def manifest(tmpdir, request):
 class Test:
 
     cli_args= {
+        "--ci": None,
         "--cli": False,
         "--copy": False,
         "--debug": False,
         "--help": False,
         "--ifile": "pipelinemanifest.json",
-        "--it": False,
         "--ofile": "./pipelines_files",
-        "--prod": False,
-        "--static": "",
         "-p": [],
         "<pipeline_name>": []
     }
@@ -97,6 +95,22 @@ class Test:
         cli_args = self.cli_args.copy()
 
         cli_args["-p"] = ["concourse:pipelines_assets"]
+
+        cpm(cli_args)
+
+        assert os.path.isfile(manifest["generated"])
+        assert manifest["generated"].read() == manifest["expected"].read()
+
+    @pytest.mark.parametrize("manifest", [("test_adv_config_ci")], indirect=True)
+    def test_base_ci(self, tmpdir, manifest):
+        """
+        argument --cli
+        generate set_{pipeline}.cmd
+        """
+
+        cli_args = self.cli_args.copy()
+
+        cli_args["--ci"] = "git-infra-res"
 
         cpm(cli_args)
 

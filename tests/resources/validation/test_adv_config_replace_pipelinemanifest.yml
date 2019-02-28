@@ -1,5 +1,5 @@
 pipelines:
-- config_file: ./concourse/pipeline.yml
+- config_file: concourse/pipeline.yml
   name: Test 1
   team: team
   vars:
@@ -7,16 +7,16 @@ pipelines:
     test: 1
     tests: 2
   vars_files:
-  - ./concourse/vars.yml
-- config_file: ./concourse/pipeline.yml
+  - concourse/vars.yml
+- config_file: concourse/pipeline.yml
   name: Test 2
   team: team 2
   vars:
     config: 2
     tests: 2
   vars_files:
-  - ./concourse/vars.yml
-  - ./concourse/vars2.yml
+  - concourse/vars.yml
+  - concourse/vars2.yml
 - config_file: ./pipelines_files/config_files/Test 3.yml
   name: Test 3
   team: team
@@ -25,8 +25,8 @@ pipelines:
     test: 1
     tests: 2
   vars_files:
-  - ./concourse/vars.yml
-  - ./concourse/vars-template.yml
+  - concourse/vars.yml
+  - concourse/vars-template.yml
 - config_file: ./pipelines_files/config_files/Test 4.yml
   name: Test 4
   team: team
@@ -36,6 +36,6 @@ pipelines:
     test7: '7'
     tests: 2
   vars_files:
-  - ./concourse/vars.yml
-  - ./concourse/vars-template.yml
-  - ./concourse/vars-pipeline.yml
+  - concourse/vars.yml
+  - concourse/vars-template.yml
+  - concourse/vars-pipeline.yml

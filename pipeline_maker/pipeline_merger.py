@@ -45,7 +45,7 @@ def merge_list(merger, path, base, nxt):
     for item in nxt:
         
         node = find_node(item, base)
-        print(node)
+
         if node:
             node = merger.merge(node,item)
         else:

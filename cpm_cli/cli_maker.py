@@ -9,14 +9,13 @@ Usage:
   cpm <pipeline_name>... [--ifile <inputfile>] [--ofile <outputfile>] 
     [-p <text_to_search:replacement_text>...] [options]
   cpm -h | --help
-  cpm --it
 
 Options:                         
   -i <inputfile>, --ifile <inputfile>       Path to the pipeline manifest. [default: pipelinemanifest.json]
   -o <outputfile>, --ofile <outputfile>     Path to the output folder. [default: ./pipelines_files]
   -p <text_to_search:replacement_text>      Search and replace operation applied before procssing the pipeline manifest.
                                             Very usefull when working locally.
-  -c <sfolder>, --ci <sfolder>              When publishing pipelines in a repo make sure it is compatible with concourse/concourse-pipeline-resource [default: git-infra-res/]
+  -c <sfolder>, --ci <sfolder>              When publishing pipelines in a repo make sure it is compatible with concourse/concourse-pipeline-resource
 Options-Flags:
   --cli                                     Generate the Fly command line for each pipeline
   --copy                                    Systematically copy the pipeline in the output directory.
@@ -39,7 +38,9 @@ import yaml, json
 import copy
 import sys, os
 import os.path
+from pathlib import Path
 import errno
+import shutil
 import fileinput
 
 def main():
@@ -169,16 +170,26 @@ def run(cli_args):
                 continue
 
         ## II.2.5 Copy (optional) -> copy les fichiers dans le dossier output
-        if cli_args["--copy"]:
+        if cli_args["--copy"] or cli_args["--ci"]:
             log.debug("** copy files")
+
+            ci = cli_args["--ci"] if cli_args["--ci"] else ""
+
             outputfile = cli_args["--ofile"] + "/config_files/" + pipeline_config.get("name") + ".yml"
 
             # config_file
-            if not os.path.exists(cli_args["--ofile"] + "/config_files/"):
+            if not os.path.exists(cli_args["--ofile"]+ "/config_files/"):
                 os.mkdir(cli_args["--ofile"] + "/config_files/")
-                
-            copyfile(pipeline_config.get("config_file"), outputfile)
-            pipeline_config.set("config_file", outputfile)
+            
+            try:
+                copyfile(pipeline_config.get("config_file"), outputfile)
+            except shutil.SameFileError as e:
+                pass
+
+            _p = Path(ci)
+            _p = _p / cli_args["--ofile"] / "config_files" / (pipeline_config.get("name") + ".yml")
+            
+            pipeline_config.set("config_file", str(_p.as_posix()))
             # vars_files
             vars_files = []
             for f in pipeline_config.get("vars_files"):
@@ -186,9 +197,17 @@ def run(cli_args):
 
                 if not os.path.exists(cli_args["--ofile"] + "/vars_files/"):
                     os.mkdir(cli_args["--ofile"] + "/vars_files/")
+
+                try:
+                    copyfile(f, outputfile)
+                except shutil.SameFileError as e:
+                    pass
+
+                _p = Path(ci)
+                _p = _p / cli_args["--ofile"] / "vars_files" / os.path.basename(f)
                 
-                copyfile(f, outputfile)
-                vars_files.append(outputfile)
+                vars_files.append(str(_p.as_posix()))
+                
             pipeline_config.set("vars_files", vars_files)
    
         ## II.2.6 Cli (optionnal) -> generate the cli
@@ -211,7 +230,7 @@ def run(cli_args):
 
     #4. Generate the pipelines_file
     # Ecrire le ficher des pipelines
-    with open(cli_args["--ofile"]+'/pipelinemanifest.yml', 'w') as outfile:
+    with open(cli_args["--ofile"] + '/pipelinemanifest.yml', 'w') as outfile:
         yaml.safe_dump(pipelines_file, outfile, default_flow_style=False)
 
     if cli_args["-p"]:
