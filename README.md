@@ -139,3 +139,23 @@ L'exemple suivant démontre comment ajouter des fonctionalitè avec l'option de 
   ]
 }
 ```
+
+## Reusing command line arguments (.cpmrc)
+
+You may choose to define a runtime configuration in a file `.cpmrc`. Place that file at the location you r usually run cpm from and pas into it your configuration.
+
+Cpm configuration is printed at each execution in the terminal and look like this:
+
+```json
+{
+  "--ci": None,
+  "--cli": False,
+  "--copy": False,
+  "--debug": False,
+  "--help": False,
+  "--ifile": "pipelinemanifest.json",
+  "--ofile": "./pipelines_files",
+  "-p": [],
+  "<pipeline_name>": []
+}
+```

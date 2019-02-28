@@ -1,4 +1,3 @@
-
 # coding: utf-8
 """
 CONCOURSE PIPELINE MAKER
@@ -62,7 +61,14 @@ def main():
     {tag} Use {color} cpm --it {reset} to activate the interactive guide"
     """.format(tag=tag.info,color=fg.green,reset=ft.reset,))
 
-    run(cli_args)
+    rc_file = "./.cpmrc"
+    if not os.path.exists(rc_file):
+        with open(rc_file) as f:
+            cli_args_rc = json.load(f)
+
+    cli_args_rc.update(cli_args)
+
+    run(cli_args_rc)
 
 def run(cli_args):
 
