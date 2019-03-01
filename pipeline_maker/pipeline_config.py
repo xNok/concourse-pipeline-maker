@@ -1,6 +1,6 @@
 import os, shutil, errno, copy
 import yaml
-import warnings
+import logging
 
 ## Dependences
 from .pipeline_merger import merge_pipeline
@@ -11,8 +11,6 @@ class PipelineConfig(object):
     """Manage the configuration of a pipeline, deal with the read/write operation"""
 
     def __init__(self, default=None, data=None):
-        self.logger = logging.getLogger(__name__)
-        self.logger.addHandler(logging.StreamHandler())
 
         if default:
             self.p_config = copy.deepcopy(default.p_config)
@@ -46,8 +44,8 @@ class PipelineConfig(object):
         Valid function: -tpl, -m, -s
         """
 
-        self.logger.info("Reading the config")
-        self.logger.debug(data)
+        logging.info("Reading the config")
+        logging.debug(data)
         ## Fly cli args
         # Single arguements allowed
         self.p_config["team"]         = self.get_parameter(data, "-t", "team")
@@ -67,13 +65,14 @@ class PipelineConfig(object):
     ## Utils processing / transformations
     def process_to_be_merged(self, out_directory="./"):
         """Loop over the merge array and merge together file in order"""
-        self.logger.info("Merging option")
+        logging.info("Merging option")
 
         with open(self.p_config["config_file"]) as fp:
             m_source = yaml.load(fp)
 
         # loop for the merge
         for  m in self.p_tools["merge"]:
+            logging.info("merging: " + str(m))
             with open(m) as fp:
                 m_destination = yaml.load(fp)
  

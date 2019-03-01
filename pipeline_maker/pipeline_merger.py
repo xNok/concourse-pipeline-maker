@@ -42,6 +42,7 @@ def find_node(item, nodes, seq_key= ["name", "get", "put", "task", "aggregate", 
 
 def merge_list(merger, path, base, nxt):
     # can we merge further in the base?
+    logging.debug(path)
     for item in nxt:
         
         node = find_node(item, base)
@@ -49,6 +50,6 @@ def merge_list(merger, path, base, nxt):
         if node:
             node = merger.merge(node,item)
         else:
-            base += item
+            base += [item]
 
     return base

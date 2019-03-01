@@ -25,6 +25,7 @@ Options-Flags:
 # Utilitaire pour gérer les commande lines
 from docopt import docopt
 from shutil import copyfile
+from deepmerge import always_merger
 
 from .h_colors import *
 
@@ -61,26 +62,23 @@ def main():
     {tag} Use {color} cpm --it {reset} to activate the interactive guide"
     """.format(tag=tag.info,color=fg.green,reset=ft.reset,))
 
-    rc_file = "./.cpmrc"
-    if not os.path.exists(rc_file):
+    rc_file = ".cpmrc"
+    cli_args_rc = {}
+    if os.path.exists(rc_file):
+        print(tag.info, "Loading runtime config from .cpmrc file", ft.reset)
         with open(rc_file) as f:
             cli_args_rc = json.load(f)
 
-    cli_args_rc.update(cli_args)
 
-    run(cli_args_rc)
+    cli_args = always_merger.merge(cli_args_rc, cli_args)
+
+    run(cli_args)
 
 def run(cli_args):
 
     # Set the log level
-    log = logging.getLogger(__name__)
-    log.handlers = []
-    ch = logging.StreamHandler()
-    log.addHandler(ch)
     if cli_args["--debug"]:
-        log.setLevel(logging.DEBUG)
-    else:
-        log.setLevel(logging.INFO)
+        logging.basicConfig(level=logging.DEBUG)
 
     # 0. do we have a pipeline manifest?
     if not os.path.isfile(cli_args["--ifile"]):
@@ -129,15 +127,17 @@ def run(cli_args):
     # II.1. Read the configuration for the space
     space_config = PipelineConfig()
     if "configs" in pipelinemanifest:
+        logging.debug("Space config found")
         print(tag.info, "Space config found", ft.reset)
         space_config.read_pipeline_config(pipelinemanifest["configs"])
-        log.debug(space_config.p_config)
+        
 
     template_configs = {}
     if "templates" in pipelinemanifest:
         print(tag.info, "%s Templates found" % len(pipelinemanifest["templates"]))
         print(", ".join(pipelinemanifest["templates"].keys()))
         for tpl in pipelinemanifest["templates"]:
+            logging.debug("Template config found")
             template_configs[tpl] = PipelineConfig(space_config, pipelinemanifest["templates"][tpl])
 
     # II.2. Read the configuration for each pipeline
@@ -148,25 +148,25 @@ def run(cli_args):
         if "template" in p or "-tpl" in p:
             # II.2.2a Templates -> start by applying the right template
             template = p["-tpl"] if "-tpl" in p else p["template"]
-            log.debug("template:" + template)
+            logging.debug("template:" + template)
             pipeline_config = PipelineConfig(template_configs[template], p)
         else:
             # II.2.2b Space config -> start by applying the space config
             pipeline_config = PipelineConfig(space_config, p)
 
-        log.debug(pipeline_config.get("name"))
-        log.debug(pipeline_config.p_config)
+        logging.debug(pipeline_config.get("name"))
+        logging.debug(pipeline_config.p_config)
         if cli_args["<pipeline_name>"] and pipeline_config.get("name") not in cli_args["<pipeline_name>"]:
             continue
 
         ## III.2.3 Partials -> merge all the partials into one file
         if pipeline_config.get("partials"):
-            log.debug("partials:" + pipeline_config.get("partials"))
+            logging.debug("partials:" + pipeline_config.get("partials"))
             pipeline_config.process_partials()
 
         ## II.2.4 Merging -> modify the pipeline config
         if pipeline_config.get("merge"):
-            log.debug("merge:" + str(pipeline_config.get("merge")))
+            logging.debug("merge:" + str(pipeline_config.get("merge")))
             try:
                 pipeline_config.process_to_be_merged(out_directory=cli_args["--ofile"])
             except IOError as e:
@@ -177,7 +177,7 @@ def run(cli_args):
 
         ## II.2.5 Copy (optional) -> copy les fichiers dans le dossier output
         if cli_args["--copy"] or cli_args["--ci"]:
-            log.debug("** copy files")
+            logging.debug("** copy files")
 
             ci = cli_args["--ci"] if cli_args["--ci"] else ""
 
@@ -218,7 +218,7 @@ def run(cli_args):
    
         ## II.2.6 Cli (optionnal) -> generate the cli
         if cli_args["--cli"]:
-            log.debug("** gen cli")
+            logging.debug("** gen cli")
             pipeline_config.process_cli()
 
         # 3.3 Save the pipeline
