@@ -161,7 +161,7 @@ def run(cli_args):
 
         ## III.2.3 Partials -> merge all the partials into one file
         if pipeline_config.get("partials"):
-            logging.debug("partials:" + pipeline_config.get("partials"))
+            logging.debug("partials:" + str(pipeline_config.get("partials")))
             pipeline_config.process_partials()
 
         ## II.2.4 Merging -> modify the pipeline config
