@@ -54,10 +54,6 @@ class PipelineConfig(object):
         # Multiple arguments allowed
         self.p_config["vars_files"]   = self.get_list_of_paramters(data, "-l", "load-vars-from", "vars_files")
 
-        # Add Prepopulated variables
-        if "pipeline" not in self.p_config["vars"]: self.p_config["vars"]["pipeline"] = {}
-        self.p_config["vars"]["pipeline"]["name"] = self.p_config["name"]
-        self.p_config["vars"]["pipeline"]["team"] = self.p_config["team"]
         # Get user vars
         self.p_config["vars"]         = self.get_list_of_paramters(data, "-v", "var", "vars")
 
