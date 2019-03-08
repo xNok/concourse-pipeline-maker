@@ -19,6 +19,7 @@ Options-Flags:
   --cli                                     Generate the Fly command line for each pipeline
   --copy                                    Systematically copy the pipeline in the output directory.
   --debug                                   Set the log level to debug
+  --fly3                                    Retro-compatibility with concourse and fly 3
   -h, --help                                Show the help screen.
 """
 
@@ -174,6 +175,20 @@ def run(cli_args):
                 print(e)
                 print(tag.info, "Locally use " + fg.green + "cpm -p <text_to_search:replacement_text>" + ft.reset + " to correct the paths in the pipelinemanifest.json")
                 continue
+
+        if cli_args["--fly3"]:
+            logging.debug("** fly3 backward compatibility")
+
+            if pipeline_config.get("vars"):
+                if not os.path.exists(cli_args["--ofile"]+ "/vars_files/"):
+                    os.mkdir(cli_args["--ofile"] + "/vars_files/")
+
+                vars_file = cli_args["--ofile"] + '/vars_files/'+ pipeline_config.get("name") +'.yml'
+
+                with open(vars_file, 'w') as outfile:
+                    yaml.safe_dump(pipeline_config.get("vars"), outfile, default_flow_style=False)
+
+                pipeline_config.set("vars_files", pipeline_config.get("vars_files") + [vars_file])
 
         ## II.2.5 Copy (optional) -> copy les fichiers dans le dossier output
         if cli_args["--copy"] or cli_args["--ci"]:
