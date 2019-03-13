@@ -195,10 +195,8 @@ def run(cli_args):
                 pipeline_config.set("vars_files", pipeline_config.get("vars_files") + [vars_file])
 
         ## II.2.5 Copy (optional) -> copy les fichiers dans le dossier output
-        if cli_args["--copy"] or cli_args["--ci"]:
+        if cli_args["--copy"]:
             logging.debug("** copy files")
-
-            ci = cli_args["--ci"] if cli_args["--ci"] else ""
 
             outputfile = cli_args["--ofile"] + "/config_files/" + pipeline_config.get("name") + ".yml"
 
@@ -211,8 +209,7 @@ def run(cli_args):
             except shutil.SameFileError as e:
                 pass
 
-            _p = Path(ci)
-            _p = _p / cli_args["--ofile"] / "config_files" / (pipeline_config.get("name") + ".yml")
+            _p = cli_args["--ofile"] / "config_files" / (pipeline_config.get("name") + ".yml")
             
             pipeline_config.set("config_file", str(_p.as_posix()))
             # vars_files
@@ -228,8 +225,7 @@ def run(cli_args):
                 except shutil.SameFileError as e:
                     pass
 
-                _p = Path(ci)
-                _p = _p / cli_args["--ofile"] / "vars_files" / os.path.basename(f)
+                _p = cli_args["--ofile"] / "vars_files" / os.path.basename(f)
                 
                 vars_files.append(str(_p.as_posix()))
                 
@@ -239,6 +235,22 @@ def run(cli_args):
         if cli_args["--cli"]:
             logging.debug("** gen cli")
             pipeline_config.process_cli()
+
+        if cli_args["--ci"]:
+            # edit config file
+            _p = Path(cli_args["--ci"])
+            _p = _p / pipeline_config.get("config_file")
+            pipeline_config.set("config_file", str(_p.as_posix()))
+            # edit var files
+            vars_files = []
+            for f in pipeline_config.get("vars_files"):
+
+                _p = Path(cli_args["--ci"] )
+                _p = _p / f
+                
+                vars_files.append(str(_p.as_posix()))
+                
+            pipeline_config.set("vars_files", vars_files)
 
         # 3.3 Save the pipeline
         print(fg.green, "Ajout de " + pipeline_config.get("name") + " au pipelinemanifest.yml", ft.reset)
