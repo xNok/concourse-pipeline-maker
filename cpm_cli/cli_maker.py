@@ -113,7 +113,11 @@ def run(cli_args):
                     print(line.replace(p.split(":")[0], p.split(":")[1]), end='')
 
     with open(cli_args["--ifile"]) as f:
-        pipelinemanifest = json.load(f)
+        filename, file_extension = os.path.splitext(cli_args["--ifile"])
+        if file_extension == ".json":
+            pipelinemanifest = json.load(f)
+        elif file_extension == ".yml":
+            pipelinemanifest = yaml.load(f)
         
     print("")
     print("This is what we gonna do:")
