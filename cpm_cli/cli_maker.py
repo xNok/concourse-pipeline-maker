@@ -209,7 +209,8 @@ def run(cli_args):
             except shutil.SameFileError as e:
                 pass
 
-            _p = cli_args["--ofile"] / "config_files" / (pipeline_config.get("name") + ".yml")
+            _p = Path(cli_args["--ofile"])
+            _p = _p / "config_files" / (pipeline_config.get("name") + ".yml")
             
             pipeline_config.set("config_file", str(_p.as_posix()))
             # vars_files
@@ -225,7 +226,8 @@ def run(cli_args):
                 except shutil.SameFileError as e:
                     pass
 
-                _p = cli_args["--ofile"] / "vars_files" / os.path.basename(f)
+                _p = Path(cli_args["--ofile"])
+                _p = _p / "vars_files" / os.path.basename(f)
                 
                 vars_files.append(str(_p.as_posix()))
                 
