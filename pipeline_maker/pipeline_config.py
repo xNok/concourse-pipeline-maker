@@ -95,8 +95,8 @@ class PipelineConfig(object):
 
     def process_partials(self):
 
-        for p in self.p_tools["partials"][1:]:
-            self.p_tools["merge"].append(self.p_config["config_file"] + p + ".yml")
+        for p in reversed(self.p_tools["partials"][1:]):
+            self.p_tools["merge"].insert(0, self.p_config["config_file"] + p + ".yml")
 
         self.p_config["config_file"] = self.p_config["config_file"] + self.p_tools["partials"][0] + ".yml"
 

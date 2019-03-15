@@ -117,7 +117,7 @@ def run(cli_args):
         if file_extension == ".json":
             pipelinemanifest = json.load(f)
         elif file_extension == ".yml":
-            pipelinemanifest = yaml.load(f)
+            pipelinemanifest = yaml.full_load(f)
         
     print("")
     print("This is what we gonna do:")
