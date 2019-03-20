@@ -69,6 +69,8 @@ def main():
         print(tag.info, "Loading runtime config from .cpmrc file", ft.reset)
         with open(rc_file) as f:
             cli_args_rc = json.load(f)
+    else:
+        print(tag.info, "Locally you can use " + fg.green + "a .cpmrc file" + ft.reset + "to avoide typing cpm flag every time")
 
 
     cli_args = always_merger.merge(cli_args_rc, cli_args)
@@ -135,6 +137,8 @@ def run(cli_args):
         logging.debug("Space config found")
         print(tag.info, "Space config found", ft.reset)
         space_config.read_pipeline_config(pipelinemanifest["configs"])
+    else:
+        print(tag.info, "Use a section " + fg.green + "configs" + ft.reset + "in pipelinemanifest.json to aplly configuration to all pipelines")
         
 
     template_configs = {}
@@ -144,6 +148,8 @@ def run(cli_args):
         for tpl in pipelinemanifest["templates"]:
             logging.debug("Template config found")
             template_configs[tpl] = PipelineConfig(space_config, pipelinemanifest["templates"][tpl])
+    else:
+        print(tag.info, "Use a section " + fg.green + "templates" + ft.reset + "in pipelinemanifest.json to create resuable configuration")
 
     # II.2. Read the configuration for each pipeline
     print(tag.info, "%s Pipelines found" % len(pipelinemanifest["pipelines"]))
@@ -266,6 +272,16 @@ def run(cli_args):
     print(ft.underline + bg.green + fg.white + "  Le Ficher pipelinemanifest.yml est prêt  " + ft.reset)
     print(fg.green + "Go check it out: " + fg.yellow + cli_args["--ofile"] + '/pipelinemanifest.yml' + ft.reset)
     print("")
+
+    if not cli_args["--cli"]:
+        print(tag.info, "Use the flag " + fg.green + "--cli" + ft.reset + " to generate executable file to generate pipeline")
+    else:
+        print(tag.info, "Executable file have been generated, see in folder: " + fg.green + "fly_cli/" + ft.reset)
+
+    if not cli_args["--copy"]:
+        print(tag.info, "Use the flag " + fg.green + "--copy" + ft.reset + " to copy all necessary files in " + cli_args["--ofile"])
+    else:
+        print(tag.info, "All files have been copied, see in folder:" + fg.green + cli_args["--ofile"] + ft.reset)
 
     #4. Generate the pipelines_file
     # Ecrire le ficher des pipelines
