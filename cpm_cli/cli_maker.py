@@ -72,13 +72,7 @@ def main():
     else:
         print(tag.info, "Locally you can use " + fg.green + "a .cpmrc file" + ft.reset + "to avoide typing cpm flag every time")
 
-    print(cli_args)
-    print("merge")
     cli_args = always_merger.merge(cli_args, cli_args_rc)
-    print("--- cli_args_rc")
-    print(cli_args_rc)
-    print("--- cli_args")
-    print(cli_args)
 
     run(cli_args)
 
