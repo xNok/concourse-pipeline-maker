@@ -3,15 +3,16 @@ Utiliser le Concourse pipeline Maker et mettre à jour le pipeline manifest
 
 ## Objectif
 
-The goal of this tool is to generate the pipeline manifest required by the ressource [concourse-pipeline-resource](https://github.com/concourse/concourse-pipeline-resource).
+The primary goal of this tool is to generate the pipeline manifest required by the ressource [concourse-pipeline-resource](https://github.com/concourse/concourse-pipeline-resource).
 
-Additionally, it provide feature to improve the maintainability of your pipelines.
+Additionally, it provide feature to improve the maintainability of your pipelines, such as:
+  * Generating command line to manually set pipeline
+  * Merge of pipeline (split configuration in multiple files or override existing configuration)
+  * Templating (reuse a configuration to generate similar pipeline)
 
 ## Usage
 
-> Structure /!\ Please be carefull with the syntax.
-
-```md
+```
 CONCOURSE PIPELINE MAKER
 
 Usage:
@@ -23,22 +24,23 @@ Usage:
 
 Options:                         
   -i <inputfile>, --ifile <inputfile>       Path to the pipeline manifest. [default: pipelinemanifest.json]
-  -o <outputfile>, --ofile <outputfile>     Path to the output folder. [default: pipelines_files]
+  -o <outputfile>, --ofile <outputfile>     Path to the output folder. [default: ./pipelines_files]
   -p <text_to_search:replacement_text>      Search and replace operation applied before procssing the pipeline manifest.
                                             Very usefull when working locally.
-  -c <sfolder>, --ci <sfolder>              When publishing pipelines in a repo make sure it is compatible with concourse/concourse-pipeline-resource [default: git-infra-res/]
+  -c <sfolder>, --ci <sfolder>              When publishing pipelines in a repo make sure it is compatible with concourse/concourse-pipeline-resource
 Options-Flags:
   --cli                                     Generate the Fly command line for each pipeline
   --copy                                    Systematically copy the pipeline in the output directory.
   --debug                                   Set the log level to debug
+  --fly3                                    Retro-compatibility with concourse and fly 3
   -h, --help                                Show the help screen.
 ```
 
-## Définition des Pipelines
+## Define pipeline
 
-Pour definir les pipelines utiliser un objet JSON et definir les flag de la commande `fly` ainsi que leurs parametres.
+`cpm` uses a manifest `pipelinemanifest.json` (by default). This manifest contain the `fly set-pipeline` parameters.
 
-Par example la commande fly suivante:
+For instance:
 
 ```sh
 fly set-pipeline -t achat \
@@ -49,7 +51,7 @@ fly set-pipeline -t achat \
   --var "repo_id=service-dummy"
 ```
 
-Se traduit dans le fichier de configuration de la manière suivante:
+Is translated into a JSON object as follow:
 
 ```json
 {
@@ -65,29 +67,24 @@ Se traduit dans le fichier de configuration de la manière suivante:
 }
 ```
 
-* La section `configs` peux être utiliser pour applicque une configurations à toutes les pipelines
-* La section `template` peux etre utiliser pour créer des configuration et les applique une ou plusieur pipeline en utilisant la clef `-tpl`, `template`
-* La section `pipelines` definit la configuration individuel de chaque pipeline
+* The `configs` section may be use to define configuration that will be applied to all the pipeline
+* The `template`section may be use to create reusable configuration. Later you can apply the using the key `-tpl`, `template` in your pipeline configuration
+* The `pipelines` section define the individual configuration for each pipeline
 
-## Entrée accepter
+## Valide pipeline configuration
 
-* `pipeline`, `-p`: nom du pipeline
-* `config`, `-c`: fichier de definition de la pipeline
-* `load-vars-from`, `-l`: fichier de varibles (string or array)
-* `var`, `-v`: tableau of variable key=value
-
-* Arguments clasic de fly cli `set_pipeline`: 
-    * `-p`, `pipeline`: nom du pipeline
-    * `-c`, `config`:  fichier de definition de la pipeline
-    * `-t`, `team`: nom de la team / org
-    * `-l`, `load-vars-from`: fichier(s) de variables (string or array)
-    * `-v`, `vars`: tableau of variable key=value
+* Arguments of `fly set_pipeline`: 
+  * `-t`, `team`: team / target
+  * `pipeline`, `-p`: pipeline name (string)
+  * `config`, `-c`: configurqation file for the pipeline (string)
+  * `load-vars-from`, `-l`: variables file(s) (string or array)
+  * `var`, `-v`: variables (JSON object)
 
 * Argument de templating
-    * `-tpl`, `template`
+    * `-tpl`, `template`: template to be use as a base for this pipeline
 
 * Argument de fusion de pipeline
-    * `-m`, `merge`: ficher(s) yml `s fusioner avec le pipeline (string or array)
+    * `-m`, `merge`: yaml file(s) to be merge together in order (string or array)
 
 ## Use case of cpm
 
@@ -97,7 +94,7 @@ I wanna generate and set pipelines locally:
 cpm
 # Process only 1 pipeline and give me the fly command to execute
 cpm my_pipilene
-# Process all pipeline and generate the fly_cli command line
+# Process all pipeline and generate the fly command line as .cmd files
 cpm --cli
 # Process all pipeline and copy all files in the output folder
 cpm --copy
@@ -105,9 +102,8 @@ cpm --copy
 cpm -p alias:path/to/the/folder
 ```
 
-## Exemple de merge et de template dans les pipelines
+## Example of merge and template configuration
 
-L'exemple suivant démontre comment ajouter des fonctionalitè avec l'option de merge. Les fichier listé apres `-m` vont ajouter, les notifications slack, l'analyse static, les tests robots. De plus nous utilisont le mode templating pour rendre facile l'utilisation de cette configuration de pipeline.
 
 ```json
 {
@@ -140,9 +136,9 @@ L'exemple suivant démontre comment ajouter des fonctionalitè avec l'option de 
 }
 ```
 
-## Reusing command line arguments (.cpmrc)
+## Reusable commandline configuration (.cpmrc)
 
-You may choose to define a runtime configuration in a file `.cpmrc`. Place that file at the location you r usually run cpm from and pas into it your configuration.
+You may choose to define a runtime configuration in a file `.cpmrc`. Place that file at the location you arr usually run cpm from and paste into it your configuration.
 
 Cpm configuration is printed at each execution in the terminal and look like this:
 
