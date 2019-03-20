@@ -3,13 +3,13 @@
 CONCOURSE PIPELINE MAKER
 
 Usage:
-  cpm [--ifile <inputfile>] [--ofile <outputfile>] 
+  cpm [--ifile <inputfile>] [--ofile <outputfile>]
     [-p <text_to_search:replacement_text>...] [options]
-  cpm <pipeline_name>... [--ifile <inputfile>] [--ofile <outputfile>] 
+  cpm <pipeline_name>... [--ifile <inputfile>] [--ofile <outputfile>]
     [-p <text_to_search:replacement_text>...] [options]
   cpm -h | --help
 
-Options:                         
+Options:
   -i <inputfile>, --ifile <inputfile>       Path to the pipeline manifest. [default: pipelinemanifest.json]
   -o <outputfile>, --ofile <outputfile>     Path to the output folder. [default: ./pipelines_files]
   -p <text_to_search:replacement_text>      Search and replace operation applied before procssing the pipeline manifest.
@@ -72,8 +72,13 @@ def main():
     else:
         print(tag.info, "Locally you can use " + fg.green + "a .cpmrc file" + ft.reset + "to avoide typing cpm flag every time")
 
-
-    cli_args = always_merger.merge(cli_args_rc, cli_args)
+    print(cli_args)
+    print("merge")
+    cli_args = always_merger.merge(cli_args, cli_args_rc)
+    print("--- cli_args_rc")
+    print(cli_args_rc)
+    print("--- cli_args")
+    print(cli_args)
 
     run(cli_args)
 
@@ -119,8 +124,8 @@ def run(cli_args):
         if file_extension == ".json":
             pipelinemanifest = json.load(f)
         elif file_extension == ".yml":
-            pipelinemanifest = yaml.full_load(f)
-        
+            pipelinemanifest = yaml.load(f)
+
     print("")
     print("This is what we gonna do:")
     print(json.dumps(cli_args, sort_keys=True, indent=4))
@@ -139,7 +144,7 @@ def run(cli_args):
         space_config.read_pipeline_config(pipelinemanifest["configs"])
     else:
         print(tag.info, "Use a section " + fg.green + "configs" + ft.reset + "in pipelinemanifest.json to aplly configuration to all pipelines")
-        
+
 
     template_configs = {}
     if "templates" in pipelinemanifest:
@@ -154,7 +159,7 @@ def run(cli_args):
     # II.2. Read the configuration for each pipeline
     print(tag.info, "%s Pipelines found" % len(pipelinemanifest["pipelines"]))
     for p in pipelinemanifest["pipelines"]:
-        
+
         # II.2.1 Create pipeline config
         if "template" in p or "-tpl" in p:
             # II.2.2a Templates -> start by applying the right template
@@ -209,7 +214,7 @@ def run(cli_args):
             # config_file
             if not os.path.exists(cli_args["--ofile"]+ "/config_files/"):
                 os.mkdir(cli_args["--ofile"] + "/config_files/")
-            
+
             try:
                 copyfile(pipeline_config.get("config_file"), outputfile)
             except shutil.SameFileError as e:
@@ -217,7 +222,7 @@ def run(cli_args):
 
             _p = Path(cli_args["--ofile"])
             _p = _p / "config_files" / (pipeline_config.get("name") + ".yml")
-            
+
             pipeline_config.set("config_file", str(_p.as_posix()))
             # vars_files
             vars_files = []
@@ -234,11 +239,11 @@ def run(cli_args):
 
                 _p = Path(cli_args["--ofile"])
                 _p = _p / "vars_files" / os.path.basename(f)
-                
+
                 vars_files.append(str(_p.as_posix()))
-                
+
             pipeline_config.set("vars_files", vars_files)
-   
+
         ## II.2.6 Cli (optionnal) -> generate the cli
         if cli_args["--cli"]:
             logging.debug("** gen cli")
@@ -255,9 +260,9 @@ def run(cli_args):
 
                 _p = Path(cli_args["--ci"] )
                 _p = _p / f
-                
+
                 vars_files.append(str(_p.as_posix()))
-                
+
             pipeline_config.set("vars_files", vars_files)
 
         # 3.3 Save the pipeline
