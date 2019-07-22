@@ -32,7 +32,7 @@ def merge_pipeline(b, n):
     return b
 
 # We find a note to keep merging base ont sone known keys
-def find_node(item, nodes, seq_key= ["name", "get", "put", "task", "aggregate", "do"]):
+def find_node(item, nodes, seq_key= ["name", "get", "put", "task", "aggregate", "do", "in_parallel"]):
     """Return first item in sequence where f(item) == True."""
     for s in nodes: # Foreach element of the destination
         for sq in seq_key: # Foreach possible key
