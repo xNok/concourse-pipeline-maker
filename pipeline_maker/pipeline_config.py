@@ -70,13 +70,13 @@ class PipelineConfig(object):
         logging.info("Merging option")
 
         with open(self.p_config["config_file"]) as fp:
-            m_source = yaml.load(fp)
+            m_source = yaml.safe_load(fp)
 
         # loop for the merge
         for  m in self.p_tools["merge"]:
             logging.info("merging: " + str(m))
             with open(m) as fp:
-                m_destination = yaml.load(fp)
+                m_destination = yaml.safe_load(fp)
  
             m_source = merge_pipeline(m_source, m_destination)
 
