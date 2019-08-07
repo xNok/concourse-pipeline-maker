@@ -3,6 +3,7 @@ import yaml
 import logging
 import tempfile
 import fileinput
+from datetime import datetime
 
 ## Dependences
 from .pipeline_merger import merge_pipeline
@@ -204,7 +205,7 @@ class PipelineConfig(object):
     # merge operation ca require temporary copy not to change the original file
     def create_temporary_copy(self, path):
         temp_dir = tempfile.gettempdir()
-        temp_path = os.path.join(temp_dir, 'temp_file_name')
+        temp_path = os.path.join(temp_dir, str(datetime.timestamp(datetime.now())) + "-" + os.path.basename(path))
         shutil.copy2(path, temp_path)
         return temp_path
 
@@ -213,8 +214,8 @@ class PipelineConfig(object):
 
         config_file = self.create_temporary_copy(config_file)
         with fileinput.FileInput(config_file, inplace=True) as file:
-            for line in file:
-                for text_to_search, replacement_text in to_replace.items():
-                    print(line.replace("((" + text_to_search + "))", replacement_text), end='')
+            for text_to_search, replacement_text in to_replace.items():
+                for line in file:
+                    print(line.replace("((" + text_to_search + "))", replacement_text))
 
         return config_file
