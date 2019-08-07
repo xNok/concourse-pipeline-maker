@@ -1,6 +1,8 @@
 import os, shutil, errno, copy
 import yaml
 import logging
+import tempfile
+import fileinput
 
 ## Dependences
 from .pipeline_merger import merge_pipeline
@@ -96,7 +98,17 @@ class PipelineConfig(object):
     def process_partials(self):
 
         for p in reversed(self.p_tools["partials"][1:]):
-            self.p_tools["merge"].insert(0, self.p_config["config_file"] + p + ".yml")
+            if isinstance(p, dict):
+                # partials:
+                # - { config_file: "config_file", with: {}}
+                config_to_merge = self.p_config["config_file"] + p["config_file"] + ".yml"
+                config_to_merge = self.replace_config_with(config_to_merge, p["with"])
+                print(config_to_merge)
+            else:
+                # partials:
+                # - "config_file"
+                config_to_merge = self.p_config["config_file"] + p + ".yml"
+            self.p_tools["merge"].insert(0, config_to_merge)
 
         self.p_config["config_file"] = self.p_config["config_file"] + self.p_tools["partials"][0] + ".yml"
 
@@ -128,13 +140,14 @@ class PipelineConfig(object):
 
         return fly
 
+    # change the config object
+    def set(self, key, value):
+        self.p_config[key] = value
+
     ## Utils extract params
     def get(self, key):
         z = {**self.p_config, **self.p_tools}
         return z[key]
-
-    def set(self, key, value):
-        self.p_config[key] = value
 
     def get_parameter(self, data, flag, name, alias=None):
         """
@@ -174,6 +187,7 @@ class PipelineConfig(object):
             
         return r
 
+    # flatten is used for vars. We need to flatten then to create a valide cli
     def flatten(self, d, parent_key='', sep='.'):
         items = []
         for k, v in d.items():
@@ -183,3 +197,21 @@ class PipelineConfig(object):
             except:
                 items.append((new_key, v))
         return dict(items)
+
+    # merge operation ca require temporary copy not to change the original file
+    def create_temporary_copy(self, path):
+        temp_dir = tempfile.gettempdir()
+        temp_path = os.path.join(temp_dir, 'temp_file_name')
+        shutil.copy2(path, temp_path)
+        return temp_path
+
+    # do inplace replace in a configfile
+    def replace_config_with(self, config_file, to_replace={}):
+
+        config_file = self.create_temporary_copy(config_file)
+        with fileinput.FileInput(config_file, inplace=True) as file:
+            for line in file:
+                for text_to_search, replacement_text in to_replace.items():
+                    print(line.replace("((" + text_to_search + "))", replacement_text), end='')
+
+        return config_file

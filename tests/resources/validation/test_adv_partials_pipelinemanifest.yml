@@ -1,0 +1,15 @@
+pipelines:
+- config_file: ./pipelines_files/config_files/Test 1.yml
+  name: Test 1
+  team: team
+  vars:
+    test: 1
+  vars_files:
+  - ./pipelines_assets/vars.yml
+- config_file: ./pipelines_files/config_files/Test 2.yml
+  name: Test 2
+  team: team
+  vars:
+    test: 1
+  vars_files:
+  - ./pipelines_assets/vars.yml

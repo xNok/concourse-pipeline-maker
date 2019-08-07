@@ -3,7 +3,7 @@ resources:
 - name: my-resource
   type: git
   source:
-    branch: master
+    branch: ((branch))
     uri: https://github.com/pivotalservices/concourse-pipeline-samples.git
 
 jobs:

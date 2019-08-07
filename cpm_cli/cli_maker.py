@@ -137,7 +137,7 @@ def run(cli_args):
         print(tag.info, "Space config found", ft.reset)
         space_config.read_pipeline_config(pipelinemanifest["configs"])
     else:
-        print(tag.info, "Use a section " + fg.green + "configs" + ft.reset + "in pipelinemanifest.json to aplly configuration to all pipelines")
+        print(tag.info, "Use a section " + fg.green + "configs" + ft.reset + " in pipelinemanifest.json to aplly configuration to all pipelines")
 
 
     template_configs = {}
@@ -148,7 +148,7 @@ def run(cli_args):
             logging.debug("Template config found")
             template_configs[tpl] = PipelineConfig(space_config, pipelinemanifest["templates"][tpl])
     else:
-        print(tag.info, "Use a section " + fg.green + "templates" + ft.reset + "in pipelinemanifest.json to create resuable configuration")
+        print(tag.info, "Use a section " + fg.green + "templates" + ft.reset + " in pipelinemanifest.json to create resuable configuration")
 
     # II.2. Read the configuration for each pipeline
     print(tag.info, "%s Pipelines found" % len(pipelinemanifest["pipelines"]))
@@ -184,20 +184,6 @@ def run(cli_args):
                 print(e)
                 print(tag.info, "Locally use " + fg.green + "cpm -p <text_to_search:replacement_text>" + ft.reset + " to correct the paths in the pipelinemanifest.json")
                 continue
-
-        if cli_args["--fly3"]:
-            logging.debug("** fly3 backward compatibility")
-
-            if pipeline_config.get("vars"):
-                if not os.path.exists(cli_args["--ofile"]+ "/vars_files/"):
-                    os.mkdir(cli_args["--ofile"] + "/vars_files/")
-
-                vars_file = cli_args["--ofile"] + '/vars_files/'+ pipeline_config.get("name") +'.yml'
-
-                with open(vars_file, 'w') as outfile:
-                    yaml.safe_dump(pipeline_config.get("vars"), outfile, default_flow_style=False)
-
-                pipeline_config.set("vars_files", pipeline_config.get("vars_files") + [vars_file])
 
         ## II.2.5 Copy (optional) -> copy les fichiers dans le dossier output
         if cli_args["--copy"]:

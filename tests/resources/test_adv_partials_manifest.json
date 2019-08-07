@@ -1,0 +1,27 @@
+{
+  "configs": {
+    "-t": "team",
+    "-l": "./pipelines_assets/vars.yml",
+    "-v": {
+      "test": 1
+    }
+  },
+  "pipelines": [
+    {
+      "-p": "Test 1",
+      "-c": "./pipelines_assets/",
+      "partials": [
+        "pipeline",
+        "override-template"
+      ]
+    },
+    {
+      "-p": "Test 2",
+      "-c": "./pipelines_assets/",
+      "partials": [
+        "pipeline",
+        {"config_file": "override-template", "with": { "branch": "master"}}
+      ]
+    }
+  ]
+}

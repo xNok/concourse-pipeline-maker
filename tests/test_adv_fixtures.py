@@ -116,3 +116,16 @@ class Test:
 
         assert os.path.isfile(manifest["generated"])
         assert manifest["generated"].read() == manifest["expected"].read()
+
+    @pytest.mark.parametrize("manifest", [("test_adv_partials")], indirect=True)
+    def test_base_ci(self, tmpdir, manifest):
+        """
+        Given fly cli arguments, generate: 
+        1. pipelinemanifest.yml
+        """
+
+        cpm(self.cli_args)
+
+        assert os.path.isfile(manifest["generated"])
+        #assert filecmp.cmp(manifest, manifest_validation)
+        assert manifest["generated"].read() == manifest["expected"].read()
