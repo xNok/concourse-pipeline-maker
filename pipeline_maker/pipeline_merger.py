@@ -31,27 +31,13 @@ def merge_pipeline(b, n):
 
     return b
 
-
-#jobs:
-#  - name: gating-rc
-#    plan:
-#    - in_parallel:
-#        steps:
-#        - get: webhook-trigger-rc
-#          (-) trigger: true
-#          (+) trigger: false
-
 # We find a note to keep merging base ont sone known keys
 def find_node(item, nodes, seq_key= ["name", "get", "put", "task"], deeper_key=["aggregate","in_parallel"]):
     """Return first item in sequence where f(item) == True."""
-    print("find_node " + str(item))
     for s in nodes: # Foreach element of the destination
-#        if s in deeper_key:
-#            find_node(item, s)
         for sq in seq_key: # Foreach possible key
             if (sq in s) and (sq in item):
                 if s[sq] == item[sq]:
-
                     return s
 
 def merge_list(merger, path, base, nxt):
