@@ -103,14 +103,17 @@ class PipelineConfig(object):
                 # - { config_file: "config_file", with: {}}
                 config_to_merge = self.p_config["config_file"] + p["config_file"] + ".yml"
                 config_to_merge = self.replace_config_with(config_to_merge, p["with"])
-                print(config_to_merge)
             else:
                 # partials:
                 # - "config_file"
                 config_to_merge = self.p_config["config_file"] + p + ".yml"
             self.p_tools["merge"].insert(0, config_to_merge)
 
-        self.p_config["config_file"] = self.p_config["config_file"] + self.p_tools["partials"][0] + ".yml"
+        if isinstance(self.p_tools["partials"][0], dict):
+            self.p_config["config_file"] = self.p_config["config_file"] + self.p_tools["partials"][0]["config_file"] + ".yml"
+            self.p_config["config_file"] = self.replace_config_with(self.p_config["config_file"], self.p_tools["partials"][0]["with"])
+        else:
+            self.p_config["config_file"] = self.p_config["config_file"] + self.p_tools["partials"][0] + ".yml"
 
     def process_cli(self, out_directory="./"):
         """provide the fly cli for a given pipeline"""
