@@ -92,7 +92,7 @@ class Test:
 
         cli_args = self.cli_args.copy()
 
-        cli_args["--cli"] = True
+        cli_args["--cli"] = "cmd"
 
         cpm(cli_args)
 

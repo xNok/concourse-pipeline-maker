@@ -15,8 +15,8 @@ Options:
   -p <text_to_search:replacement_text>      Search and replace operation applied before procssing the pipeline manifest.
                                             Very usefull when working locally.
   -c <sfolder>, --ci <sfolder>              When publishing pipelines in a repo make sure it is compatible with concourse/concourse-pipeline-resource
-Options-Flags:
-  --cli                                     Generate the Fly command line for each pipeline
+  -x <cli_ext>, --cli <cli_ext>             Generate the Fly command line for each pipeline [default: cmd]
+  Options-Flags:
   --copy                                    Systematically copy the pipeline in the output directory.
   --debug                                   Set the log level to debug
   --fly3                                    Retro-compatibility with concourse and fly 3
@@ -227,7 +227,7 @@ def run(cli_args):
         ## II.2.6 Cli (optionnal) -> generate the cli
         if cli_args["--cli"]:
             logging.debug("** gen cli")
-            pipeline_config.process_cli()
+            pipeline_config.process_cli(ext=cli_args["--cli"])
 
         if cli_args["--ci"]:
             # edit config file

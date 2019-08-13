@@ -116,9 +116,10 @@ class PipelineConfig(object):
         else:
             self.p_config["config_file"] = self.p_config["config_file"] + self.p_tools["partials"][0] + ".yml"
 
-    def process_cli(self, out_directory="./"):
+    def process_cli(self, out_directory="./", ext="cmd"):
         """provide the fly cli for a given pipeline"""
 
+        # Create fly command line
         fly = "fly -t " + self.p_config["team"] + " set-pipeline" \
                                 + " -p " + self.p_config["name"] \
                                 + " -c "  + self.p_config["config_file"] \
@@ -127,20 +128,31 @@ class PipelineConfig(object):
 
         self.p_tools["cli"] = fly
 
+        # Create output dir
         out_directory = out_directory + '/fly_cli/'
-
         if not os.path.exists(out_directory):
             os.mkdir(out_directory)
 
-        # Write output
-        with open(out_directory + self.p_config["name"] + ".cmd", 'w+') as outfile:
-            outfile.write("cd /d %~dp0")
-            outfile.write('\n')
-            outfile.write('cd ..')
-            outfile.write('\n')
-            outfile.write(fly)
-            outfile.write('\n')
-            outfile.write("pause")
+        if ext in ["sh", ".sh"]:
+            # Write output
+            with open(out_directory + self.p_config["name"] + ".sh", 'w+') as outfile:
+                outfile.write("cd `dirname $0`")
+                outfile.write('\n')
+                outfile.write('cd ..')
+                outfile.write('\n')
+                outfile.write(fly)
+                outfile.write('\n')
+                outfile.write("read -p 'Press [Enter] key to continue...'")
+        else:
+            # Write output
+            with open(out_directory + self.p_config["name"] + ".cmd", 'w+') as outfile:
+                outfile.write("cd /d %~dp0")
+                outfile.write('\n')
+                outfile.write('cd ..')
+                outfile.write('\n')
+                outfile.write(fly)
+                outfile.write('\n')
+                outfile.write("pause")
 
         return fly
 
