@@ -4,6 +4,7 @@ import logging
 import tempfile
 import fileinput
 from datetime import datetime
+import re
 
 ## Dependences
 from .pipeline_merger import merge_pipeline
@@ -226,8 +227,9 @@ class PipelineConfig(object):
 
         config_file = self.create_temporary_copy(config_file)
         with fileinput.FileInput(config_file, inplace=True) as file:
-            for text_to_search, replacement_text in to_replace.items():
-                for line in file:
-                    print(line.replace("((" + text_to_search + "))", replacement_text))
+            to_replace = dict((re.escape("((" + k + "))"), v) for k, v in to_replace.items())
+            pattern = re.compile("|".join(to_replace.keys()))
+            for line in file:
+                print(pattern.sub(lambda m: to_replace[re.escape(m.group(0))], line))
 
         return config_file
