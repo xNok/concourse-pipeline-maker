@@ -7,7 +7,7 @@ The primary goal of this tool is to generate the pipeline manifest required by t
 
 Additionally, it provide feature to improve the maintainability of your pipelines, such as:
   * Generating command line to manually set pipeline
-  * Merge of pipeline (split configuration in multiple files or override existing configuration)
+  * Merge of pipeline (Therefore you can split yout yaml configuration in multiple files or override existing configuration)
   * Templating (reuse a configuration to generate similar pipeline)
 
 ## Usage
@@ -16,37 +16,36 @@ Additionally, it provide feature to improve the maintainability of your pipeline
 CONCOURSE PIPELINE MAKER
 
 Usage:
-  cpm [--ifile <inputfile>] [--ofile <outputfile>] 
+  cpm [--ifile <inputfile>] [--ofile <outputfile>]
     [-p <text_to_search:replacement_text>...] [options]
-  cpm <pipeline_name>... [--ifile <inputfile>] [--ofile <outputfile>] 
+  cpm <pipeline_name>... [--ifile <inputfile>] [--ofile <outputfile>]
     [-p <text_to_search:replacement_text>...] [options]
   cpm -h | --help
 
-Options:                         
+Options:
   -i <inputfile>, --ifile <inputfile>       Path to the pipeline manifest. [default: pipelinemanifest.json]
   -o <outputfile>, --ofile <outputfile>     Path to the output folder. [default: ./pipelines_files]
   -p <text_to_search:replacement_text>      Search and replace operation applied before procssing the pipeline manifest.
                                             Very usefull when working locally.
   -c <sfolder>, --ci <sfolder>              When publishing pipelines in a repo make sure it is compatible with concourse/concourse-pipeline-resource
-Options-Flags:
-  --cli                                     Generate the Fly command line for each pipeline
+  -x <cli_ext>, --cli <cli_ext>             Generate the Fly command line for each pipeline [default: cmd]
+  Options-Flags:
   --copy                                    Systematically copy the pipeline in the output directory.
   --debug                                   Set the log level to debug
-  --fly3                                    Retro-compatibility with concourse and fly 3
   -h, --help                                Show the help screen.
 ```
 
 ## Define pipeline
 
-`cpm` uses a manifest `pipelinemanifest.json` (by default). This manifest contain the `fly set-pipeline` parameters.
+`cpm` uses a manifest called `pipelinemanifest.json` (by default, yaml format is also supported). This manifest contain the `fly set-pipeline` parameters for each pipeline to be set.
 
 For instance:
 
 ```sh
 fly set-pipeline -t achat \
   -p service-dummy \
-  -c ./consourse/pipelines/nonprod-services-pipeline.yml \
-  --load-vars-from ./consourse/vars/vars-nonproduction.yml \
+  -c ./pipelines/services-pipeline.yml \
+  --load-vars-from ./vars/vars-dev.yml \
   --var "artifact_id=service-dummy"\
   --var "repo_id=service-dummy"
 ```
@@ -67,11 +66,11 @@ Is translated into a JSON object as follow:
 }
 ```
 
-* The `configs` section may be use to define configuration that will be applied to all the pipeline
-* The `template`section may be use to create reusable configuration. Later you can apply the using the key `-tpl`, `template` in your pipeline configuration
+* The `configs` section may be use to define configuration that will be applied to every the pipeline
+* The `template`section may be use to create reusable configuration. Later you can apply it by using the key `-tpl` ot `template` in your pipeline configuration
 * The `pipelines` section define the individual configuration for each pipeline
 
-## Valide pipeline configuration
+### Valide pipeline configuration
 
 * Arguments of `fly set_pipeline`: 
   * `-t`, `team`: team / target
@@ -85,25 +84,9 @@ Is translated into a JSON object as follow:
 
 * Argument de fusion de pipeline
     * `-m`, `merge`: yaml file(s) to be merge together in order (string or array)
+    * `patials`: if provide folder name in `config`, `-c`, then you can list all the files you want to merge together from that folder
 
-## Use case of cpm
-
-I wanna generate and set pipelines locally:
-```bash
-# Process the pipeline manifest
-cpm
-# Process only 1 pipeline and give me the fly command to execute
-cpm my_pipilene
-# Process all pipeline and generate the fly command line as .cmd files
-cpm --cli
-# Process all pipeline and copy all files in the output folder
-cpm --copy
-# My pipeline are in an other location and I use a generic name for it
-cpm -p alias:path/to/the/folder
-```
-
-## Example of merge and template configuration
-
+## Example of configuration with merge and template
 
 ```json
 {
@@ -135,6 +118,81 @@ cpm -p alias:path/to/the/folder
   ]
 }
 ```
+
+## Example of configuration with Partials
+
+This configuration will create a ppeline called `Test` by merging the files:
+  * path/to/pipeline/folder/buid_it.yml
+  * path/to/pipeline/folder/test_it.yml
+  * path/to/pipeline/folder/ship_it.yml
+
+```json
+{
+  "configs": {
+    "-t": "team"
+  },
+  "templates": {},
+  "pipelines": [
+    {
+      "-p": "Test",
+      "-c": "path/to/pipeline/folder/",
+      "partials": [
+        "buid_it",
+        "test_it",
+        "ship_it"
+      ]
+    }
+  ]
+}
+```
+
+## Example of configuration with Partials and inplace replace
+
+This configuration will create a ppeline called `Test` by merging the files:
+  * path/to/pipeline/folder/buid_it.yml
+  * path/to/pipeline/folder/test_it.yml
+  * path/to/pipeline/folder/ship_it.yml and replace **((var))** by `foo`
+  * path/to/pipeline/folder/ship_it.yml and replace **((var))** by `bar`
+
+```json
+{
+  "configs": {
+    "-t": "team"
+  },
+  "templates": {},
+  "pipelines": [
+    {
+      "-p": "Test",
+      "-c": "path/to/pipeline/folder/",
+      "partials": [
+        "buid_it",
+        "test_it",
+        {"config_file": "ship_it", "with": { "var": "foo"}},
+        {"config_file": "ship_it", "with": { "var": "bar"}}
+      ]
+    }
+  ]
+}
+```
+
+## Use case of cpm
+
+I wanna generate and set pipelines locally:
+```bash
+# Process the pipeline manifest
+cpm
+# Process only 1 pipeline and give me the fly command to execute
+cpm my_pipilene
+# Process all pipeline and generate the fly command line as .cmd files
+cpm --cli cmd
+# Process all pipeline and generate the fly command line as .sh files
+cpm --cli sh
+# Process all pipeline and copy all files in the output folder
+cpm --copy
+# My pipeline are in an other location and I use a generic name for it
+cpm -p alias:path/to/the/folder
+```
+
 
 ## Reusable commandline configuration (.cpmrc)
 
