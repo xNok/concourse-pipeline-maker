@@ -1,4 +1,4 @@
-Utiliser le Concourse pipeline Maker et mettre à jour le pipeline manifest
+Concourse pipeline maker - Generate Conconse pipeline from smaller chunks
 ===
 
 ## Objectif
