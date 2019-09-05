@@ -139,14 +139,13 @@ def run(cli_args):
     else:
         print(tag.info, "Use a section " + fg.green + "configs" + ft.reset + " in pipelinemanifest.json to aplly configuration to all pipelines")
 
-
     template_configs = {}
     if "templates" in pipelinemanifest:
         print(tag.info, "%s Templates found" % len(pipelinemanifest["templates"]))
         print(", ".join(pipelinemanifest["templates"].keys()))
         for tpl in pipelinemanifest["templates"]:
             logging.debug("Template config found")
-            template_configs[tpl] = PipelineConfig(space_config, pipelinemanifest["templates"][tpl])
+            template_configs[tpl] = PipelineConfig(data=pipelinemanifest["templates"][tpl], default=space_config)
     else:
         print(tag.info, "Use a section " + fg.green + "templates" + ft.reset + " in pipelinemanifest.json to create resuable configuration")
 
@@ -154,38 +153,15 @@ def run(cli_args):
     print(tag.info, "%s Pipelines found" % len(pipelinemanifest["pipelines"]))
     for p in pipelinemanifest["pipelines"]:
 
-        # II.2.1 Create pipeline config
-        if "template" in p or "-tpl" in p:
-            # II.2.2a Templates -> start by applying the right template
-            template = p["-tpl"] if "-tpl" in p else p["template"]
-            logging.debug("template:" + template)
-            pipeline_config = PipelineConfig(template_configs[template], p)
-        else:
-            # II.2.2b Space config -> start by applying the space config
-            pipeline_config = PipelineConfig(space_config, p)
+        pipeline_config = PipelineConfig(data=p, templates=template_configs, default=space_config)
 
-        logging.debug(pipeline_config.get("name"))
-        logging.debug(pipeline_config.p_config)
+        # Skip this pipeline if it is not one of the specified pipelines
         if cli_args["<pipeline_name>"] and pipeline_config.get("name") not in cli_args["<pipeline_name>"]:
             continue
 
-        ## III.2.3 Partials -> merge all the partials into one file
-        if pipeline_config.get("partials"):
-            logging.debug("partials:" + str(pipeline_config.get("partials")))
-            pipeline_config.process_partials()
+        pipeline_config.make_pipeline(out_directory=cli_args["--ofile"])
 
-        ## II.2.4 Merging -> modify the pipeline config
-        if pipeline_config.get("merge"):
-            logging.debug("merge:" + str(pipeline_config.get("merge")))
-            try:
-                pipeline_config.process_to_be_merged(out_directory=cli_args["--ofile"])
-            except IOError as e:
-                print(fg.red, "Error: File does not appear to exist.", ft.reset)
-                print(e)
-                print(tag.info, "Locally use " + fg.green + "cpm -p <text_to_search:replacement_text>" + ft.reset + " to correct the paths in the pipelinemanifest.json")
-                continue
-
-        ## II.2.5 Copy (optional) -> copy les fichiers dans le dossier output
+        ## II.2.6 Copy (optional) -> copy les fichiers dans le dossier output
         if cli_args["--copy"]:
             logging.debug("** copy files")
 
@@ -224,11 +200,12 @@ def run(cli_args):
 
             pipeline_config.set("vars_files", vars_files)
 
-        ## II.2.6 Cli (optionnal) -> generate the cli
+        ## II.2.7 Cli (optionnal) -> generate the cli
         if cli_args["--cli"]:
             logging.debug("** gen cli")
             pipeline_config.process_cli(ext=cli_args["--cli"])
 
+        ## II.2.8 Cli (optionnal) -> change the path tu be used in concourse
         if cli_args["--ci"]:
             # edit config file
             _p = Path(cli_args["--ci"])

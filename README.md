@@ -1,7 +1,14 @@
-Concourse pipeline maker - Generate Conconse pipeline from smaller chunks
+Concourse pipeline maker - Generate Concourse pipeline from smaller chunks
 ===
 
 ## Objectif
+
+> There is a real need to facilitate the reuse in concourse pipelines
+
+> If you took are managing micro-services you know that there is no native way in Concourse to make batch modifications in pipelines and to historicize these changes.
+
+> A pipeline of 1000 lines is a bit difficult to manage
+
 
 The primary goal of this tool is to generate the pipeline manifest required by the ressource [concourse-pipeline-resource](https://github.com/concourse/concourse-pipeline-resource).
 
@@ -35,7 +42,7 @@ Options:
   -h, --help                                Show the help screen.
 ```
 
-## Define pipeline
+## Define a pipeline configuration
 
 `cpm` uses a manifest called `pipelinemanifest.json` (by default, yaml format is also supported). This manifest contain the `fly set-pipeline` parameters for each pipeline to be set.
 
@@ -86,7 +93,13 @@ Is translated into a JSON object as follow:
     * `-m`, `merge`: yaml file(s) to be merge together in order (string or array)
     * `patials`: if provide folder name in `config`, `-c`, then you can list all the files you want to merge together from that folder
 
-## Example of configuration with merge and template
+## More things you can do with cpm
+
+### template
+
+#### Example of configuration template
+
+This configuration create a ppeline called `Test` using the confuguration from the template called `template`
 
 ```json
 {
@@ -117,9 +130,41 @@ Is translated into a JSON object as follow:
     }
   ]
 }
+
 ```
 
-## Example of configuration with Partials
+### merge
+
+This configuration will create a ppeline called `Test` by merging the files:
+  * path/to/pipeline/buid_it.yml
+  * path/to/pipeline/test_it.yml
+  * path/to/pipeline/ship_it.yml
+
+```json
+{
+  "configs": {
+    "-t": "team",
+    "-l": "./pipelines_assets/vars-configs.yml",
+  },
+  "templates": {},
+  "pipelines": [
+    {
+      "-p": "Test",
+      "-tpl": "template",
+      "-c": "path/to/pipeline/buid_it.yml",
+      "-m": [
+        "path/to/pipeline/test_it.yml",
+        "path/to/pipeline/ship_it.yml"
+      ]
+    }
+  ]
+}
+
+```
+
+### partials
+
+#### Example of configuration with Partials
 
 This configuration will create a ppeline called `Test` by merging the files:
   * path/to/pipeline/folder/buid_it.yml
@@ -146,7 +191,7 @@ This configuration will create a ppeline called `Test` by merging the files:
 }
 ```
 
-## Example of configuration with Partials and inplace replace
+#### Example of configuration with Partials and inplace replace
 
 This configuration will create a ppeline called `Test` by merging the files:
   * path/to/pipeline/folder/buid_it.yml
@@ -174,6 +219,35 @@ This configuration will create a ppeline called `Test` by merging the files:
   ]
 }
 ```
+
+### resources
+
+Ressource are often the sane accross your pipelines, therefore it would be nice to reduce duplication and define them ina single file. However not every ressource should be added to every pipelines. The `resources_file` or `-r` flag let you declare a file to be merge in your pipeline, but unused *resources* and *resource_types* will be removed.
+
+#### Example of configuration with Resources
+
+This configuration will create a ppeline called `Test` by merging the files:
+* path/to/pipeline/buid_it.yml
+* path/to/resources/ressource.yml (but removes *resources* and *resource_types* not in path/to/pipeline/buid_it.yml)
+
+
+```json
+{
+  "configs": {
+    "-t": "team",
+    "-r": "path/to/resources/ressource.yml",
+  },
+  "templates": {},
+  "pipelines": [
+    {
+      "-p": "Test",
+      "-c": "path/to/pipeline/buid_it.yml"
+    }
+  ]
+}
+```
+
+
 
 ## Use case of cpm
 

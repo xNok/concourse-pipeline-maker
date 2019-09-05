@@ -62,3 +62,6 @@ jobs:
         - -exc
         - |
           echo "Output of your other tasks."
+- name: GET-booklit-releases
+  plan:
+  - get: booklit-releases
