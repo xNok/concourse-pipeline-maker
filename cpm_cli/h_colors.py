@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 # Python program to print 
 # colored text and background 
 class ft: 

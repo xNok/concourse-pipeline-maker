@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name='cpm',
-      version='1.2.4',
+      version='1.2.5',
       description='Generate pipelines_file to be used with concourse/concourse-pipeline-resource',
       author='Alexandre Couedelo',
       author_email='alexandre.couedelo@desjardins.com',

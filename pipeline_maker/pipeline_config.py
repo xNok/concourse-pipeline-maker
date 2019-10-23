@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os, shutil, errno, copy
 import yaml
 import logging
@@ -20,7 +21,6 @@ class PipelineConfig(object):
             templates -> let you initialise form template
             data -> read the configuration
         """
-
         # Create default config
         if default:
             self.p_config = copy.deepcopy(default.p_config)
@@ -64,17 +64,17 @@ class PipelineConfig(object):
 
         ## Partials -> merge all the partials into one file
         if self.get("partials"):
-            logging.debug("partials:" + str(self.get("partials")))
+            logging.debug("partials: " + str(self.get("partials")))
             self.process_partials()
 
         ## Merging -> modify the pipeline config
         if self.get("merge"):
-            logging.debug("merge:" + str(self.get("merge")))
+            logging.debug("merge: " + str(self.get("merge")))
             self.process_to_be_merged(out_directory=out_directory)
 
         ## Resources -> Merge the new ressources if needed
         if self.get("resources_file"):
-            logging.debug("resources:" + str(self.get("resources_file")))
+            logging.debug("resources: " + str(self.get("resources_file")))
             self.process_resources(out_directory=out_directory)
 
     def read_pipeline_config(self, data):
@@ -176,11 +176,11 @@ class PipelineConfig(object):
 
             # keep only what we need
             resources_file["resources"]      = [r for r in resources_file["resources"] if r["name"] in result]
-            resources_type = set([r["type"] for r in resources_file["resources"]])
+            resources_type                   = set([r["type"] for r in resources_file["resources"]])
             resources_file["resource_types"] = [r for r in resources_file["resource_types"] if r["name"] in resources_type ]
 
-            logging.debug("resources:" + str(resources_file["resources"]))
-            logging.debug("resource_types:" + str(resources_file["resource_types"]))
+            logging.debug("resources: " + str(result))
+            logging.debug("resource_types: " + str(resources_type))
 
             with open(self.p_config["config_file"]) as fp:
                 m_source = yaml.safe_load(fp)
@@ -204,7 +204,7 @@ class PipelineConfig(object):
         self.p_tools["cli"] = fly
 
         # Create output dir
-        out_directory = out_directory + '/fly_cli/'
+        out_directory = out_directory + '/set-pipeline/'
         if not os.path.exists(out_directory):
             os.mkdir(out_directory)
 
@@ -249,8 +249,10 @@ class PipelineConfig(object):
 
         if flag in data:
             r = data[flag]
-        elif  name in data:
+        elif name in data:
             r = data[name]
+        elif alias in data:
+            r = data[alias]
         else:
             r = self.get(alias)
         
@@ -267,6 +269,8 @@ class PipelineConfig(object):
             _r = data[flag] if not isinstance(data[flag], str) else [data[flag]]
         elif name in data:
             _r = data[name] if not isinstance(data[name], str) else [data[name]]
+        elif alias in data:
+            _r = data[alias] if not isinstance(data[alias], str) else [data[alias]]
         else:
             _r = None
 

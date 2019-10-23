@@ -1,4 +1,5 @@
-# coding: utf-8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 CONCOURSE PIPELINE MAKER
 
@@ -19,7 +20,6 @@ Options:
   Options-Flags:
   --copy                                    Systematically copy the pipeline in the output directory.
   --debug                                   Set the log level to debug
-  --fly3                                    Retro-compatibility with concourse and fly 3
   -h, --help                                Show the help screen.
 """
 
@@ -203,7 +203,7 @@ def run(cli_args):
         ## II.2.7 Cli (optionnal) -> generate the cli
         if cli_args["--cli"]:
             logging.debug("** gen cli")
-            pipeline_config.process_cli(ext=cli_args["--cli"])
+            pipeline_config.process_cli(ext=cli_args["--cli"], out_directory=cli_args["--ofile"])
 
         ## II.2.8 Cli (optionnal) -> change the path tu be used in concourse
         if cli_args["--ci"]:
