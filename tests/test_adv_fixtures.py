@@ -149,3 +149,8 @@ class Test:
         pipeline_to_expect   = manifest["tmpdir"].join('./pipelines_validation/pipelines_files/config_files/Test 3.yml')
         assert os.path.isfile(pipeline_to_validate)
         assert pipeline_to_validate.read() == pipeline_to_expect.read()
+
+        pipeline_to_validate = manifest["tmpdir"].join('./pipelines_files/config_files/Test 4.yml')
+        pipeline_to_expect   = manifest["tmpdir"].join('./pipelines_validation/pipelines_files/config_files/Test 4.yml')
+        assert os.path.isfile(pipeline_to_validate)
+        assert pipeline_to_validate.read() == pipeline_to_expect.read()

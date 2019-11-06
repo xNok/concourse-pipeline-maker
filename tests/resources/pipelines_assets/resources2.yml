@@ -1,0 +1,13 @@
+resource_types:
+- name: rss
+  type: docker-image
+  source:
+    repository: suhlig/concourse-rss-resource
+    tag: latest
+
+resources:
+- name: booklit-releases
+  type: rss
+  source:
+    url: http://www.qwantz.com/rssfeed.php
+    foo: bar

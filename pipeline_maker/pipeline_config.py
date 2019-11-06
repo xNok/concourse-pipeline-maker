@@ -112,17 +112,17 @@ class PipelineConfig(object):
 
         # base pipeline configuration
         with open(self.p_config["config_file"]) as fp:
-            m_source = yaml.safe_load(fp)
+            m_base = yaml.safe_load(fp)
 
         # loop for the merge
         for  m in self.p_tools["merge"]:
             logging.info("merging: " + str(m))
             with open(m) as fp:
-                m_destination = yaml.safe_load(fp)
+                m_addon = yaml.safe_load(fp)
  
-            m_source = merge_pipeline(m_source, m_destination)
+            m_base = merge_pipeline(m_base, m_addon)
 
-        self.print_config_file(m_source, out_directory=out_directory)
+        self.print_config_file(m_base, out_directory=out_directory)
 
         return self.p_config["config_file"]
 
@@ -164,32 +164,42 @@ class PipelineConfig(object):
 
     def process_resources(self, out_directory="./"):
 
-        for files in self.get("resources_file"):
+        # Merge all resource files together
+        files = self.get("resources_file")
 
-            with open(files) as f:
-                resources_file = yaml.safe_load(f)
-                resources = set([r["name"] for r in resources_file["resources"]])
+        with open(files[0]) as f:
+            resources_file = yaml.safe_load(f)
+        
+        for f in files[1:]:
+            with open(f) as fp:
+                m_addon = yaml.safe_load(fp)
 
-            # Which resources do we need ?
-            with open(self.get("config_file")) as f:
-                result = [self.find_resource(resources, line.lower()) for line in f.readlines() if self.find_resource(resources, line.lower())]
+            resources_file = merge_pipeline(resources_file,m_addon)
 
-            # keep only what we need
-            resources_file["resources"]      = [r for r in resources_file["resources"] if r["name"] in result]
-            resources_type                   = set([r["type"] for r in resources_file["resources"]])
-            resources_file["resource_types"] = [r for r in resources_file["resource_types"] if r["name"] in resources_type ]
+        
+        # Analyse resource we have in resource file
+        resources = set([r["name"] for r in resources_file["resources"]])
 
-            logging.debug("resources: " + str(result))
-            logging.debug("resource_types: " + str(resources_type))
+        # Which resources do we need ?
+        with open(self.get("config_file")) as f:
+            result = [self.find_resource(resources, line.lower()) for line in f.readlines() if self.find_resource(resources, line.lower())]
 
-            with open(self.p_config["config_file"]) as fp:
-                m_source = yaml.safe_load(fp)
+        # keep only what we need
+        resources_file["resources"]      = [r for r in resources_file["resources"] if r["name"] in result]
+        resources_type                   = set([r["type"] for r in resources_file["resources"]])
+        resources_file["resource_types"] = [r for r in resources_file["resource_types"] if r["name"] in resources_type ]
 
-            m_source = merge_pipeline(m_source,resources_file)
+        logging.debug("resources: " + str(result))
+        logging.debug("resource_types: " + str(resources_type))
 
-            self.print_config_file(m_source, out_directory=out_directory)
+        with open(self.p_config["config_file"]) as fp:
+            m_base = yaml.safe_load(fp)
 
-            return self.p_config["config_file"]
+        m_base = merge_pipeline(m_base,resources_file)
+
+        self.print_config_file(m_base, out_directory=out_directory)
+
+        return self.p_config["config_file"]
 
     def process_cli(self, out_directory="./", ext="cmd"):
         """provide the fly cli for a given pipeline"""

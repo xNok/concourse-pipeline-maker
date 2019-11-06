@@ -1,0 +1,80 @@
+jobs:
+- name: Run-automatically
+  plan:
+  - get: my-resource
+    trigger: true
+  - config:
+      image_resource:
+        source:
+          repository: ubuntu
+        type: docker-image
+      platform: linux
+      run:
+        args:
+        - -exc
+        - 'echo "This job is automatically triggered upon any version change in the
+          resource."
+
+          '
+        path: sh
+    task: do-your-task-here
+- name: Manually-trigger-me
+  plan:
+  - get: my-resource
+    passed:
+    - Run-automatically
+    trigger: false
+  - config:
+      image_resource:
+        source:
+          repository: ubuntu
+        type: docker-image
+      platform: linux
+      run:
+        args:
+        - -exc
+        - 'echo "Output of your manually triggered task."
+
+          '
+        path: sh
+    task: do-your-manual-task-here
+- name: Do-more-stuff-after-manual-trigger
+  plan:
+  - get: my-resource
+    passed:
+    - Manually-trigger-me
+    trigger: true
+  - config:
+      image_resource:
+        source:
+          repository: ubuntu
+        type: docker-image
+      platform: linux
+      run:
+        args:
+        - -exc
+        - 'echo "Output of your other tasks."
+
+          '
+        path: sh
+    task: do-other-tasks-here
+- name: GET-booklit-releases
+  plan:
+  - get: booklit-releases
+resource_types:
+- name: rss
+  source:
+    repository: suhlig/concourse-rss-resource
+    tag: latest
+  type: docker-image
+resources:
+- name: my-resource
+  source:
+    branch: template
+    uri: https://github.com/pivotalservices/concourse-pipeline-samples.git
+  type: git
+- name: booklit-releases
+  source:
+    foo: bar
+    url: http://www.qwantz.com/rssfeed.php
+  type: rss

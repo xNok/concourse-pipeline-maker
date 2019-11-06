@@ -20,3 +20,10 @@ pipelines:
     test: 1
   vars_files:
   - ./pipelines_assets/vars.yml
+- config_file: ./pipelines_files/config_files/Test 4.yml
+  name: Test 4
+  team: team
+  vars:
+    test: 1
+  vars_files:
+  - ./pipelines_assets/vars.yml

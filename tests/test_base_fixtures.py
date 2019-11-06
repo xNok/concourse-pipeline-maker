@@ -99,8 +99,8 @@ class Test:
         assert os.path.isfile(manifest["generated"])
         assert manifest["generated"].read() == manifest["expected"].read()
 
-        assert os.path.isfile(tmpdir.join('./fly_cli/Test 1.cmd'))
-        assert os.path.isfile(tmpdir.join('./fly_cli/Test 2.cmd'))
+        assert os.path.isfile(tmpdir.join('./pipelines_files/set-pipeline/Test 1.cmd'))
+        assert os.path.isfile(tmpdir.join('./pipelines_files/set-pipeline/Test 2.cmd'))
 
     @pytest.mark.parametrize("manifest", [("test_base_config_copy")], indirect=True)
     def test_base_copy(self, tmpdir, manifest):

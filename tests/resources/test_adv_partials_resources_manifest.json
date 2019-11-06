@@ -31,6 +31,15 @@
         "pipeline",
         {"config_file": "override-template", "with": { "branch": "master"}}
       ]
+    },
+    {
+      "-p": "Test 4",
+      "-c": "./pipelines_assets/",
+      "resources_file": ["./pipelines_assets/resources.yml", "./pipelines_assets/resources2.yml"],
+      "partials": [
+        "pipeline",
+        {"config_file": "override-template", "with": { "branch": "master"}}
+      ]
     }
   ]
 }
