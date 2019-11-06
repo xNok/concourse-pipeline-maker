@@ -187,9 +187,10 @@ class PipelineConfig(object):
         # keep only what we need
         resources_file["resources"]      = [r for r in resources_file["resources"] if r["name"] in result]
         resources_type                   = set([r["type"] for r in resources_file["resources"]])
-        resources_file["resource_types"] = [r for r in resources_file["resource_types"] if r["name"] in resources_type ]
+        if "resource_types" in resources_file:
+            resources_file["resource_types"] = [r for r in resources_file["resource_types"] if r["name"] in resources_type ]
 
-        logging.debug("resources: " + str(result))
+        logging.debug("resources: " + str(resources))
         logging.debug("resource_types: " + str(resources_type))
 
         with open(self.p_config["config_file"]) as fp:
