@@ -25,23 +25,22 @@ Options:
 
 # Utilitaire pour gérer les commande lines
 from docopt import docopt
-from shutil import copyfile
-from deepmerge import always_merger
 
-from .h_colors import *
+from deepmerge import always_merger
+from cli_cpm.h_colors import *
 
 import logging
 
 # Generer le fichier de configuration des pipelines
-from pipeline_maker.pipeline_config import PipelineConfig
+from lib.entities.pipeline_config import PipelineConfig
+from lib.use_cases.create_fly_cmd import generate_cli
 
-import yaml, json
-import copy
-import sys, os
-import os.path
 from pathlib import Path
+import yaml, json
+import copy, sys, os, os.path
 import errno
 import shutil
+from shutil import copyfile
 import fileinput
 
 def main():
@@ -203,7 +202,7 @@ def run(cli_args):
         ## II.2.7 Cli (optionnal) -> generate the cli
         if cli_args["--cli"]:
             logging.debug("** gen cli")
-            pipeline_config.process_cli(ext=cli_args["--cli"], out_directory=cli_args["--ofile"])
+            generate_cli(pipeline_config, ext=cli_args["--cli"], out_directory=cli_args["--ofile"])
 
         ## II.2.8 Cli (optionnal) -> change the path tu be used in concourse
         if cli_args["--ci"]:

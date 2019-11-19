@@ -5,7 +5,7 @@ import filecmp
 import difflib
 import os
 
-from cpm_cli.cli_maker import run as cpm
+from cli_cpm.cli import run as cpm
 
 ###
 #The basic fictures are:

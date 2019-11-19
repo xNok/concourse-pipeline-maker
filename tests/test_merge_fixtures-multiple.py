@@ -1,6 +1,6 @@
 import pytest
 
-from pipeline_maker.pipeline_merger import merge_pipeline
+from lib.use_cases.merge_pipelines_together import merge_pipeline
 
 #jobs: #list
 #  - name: gating-rc
