@@ -1,3 +1,6 @@
 pyyaml
 docopt
 deepmerge
+asyncio
+pytest
+pytest-asyncio
