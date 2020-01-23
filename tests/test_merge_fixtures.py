@@ -1,6 +1,6 @@
 import pytest
 
-from lib.use_cases.merge_pipelines_together import merge_pipeline
+from lib.use_cases.use_merge import merge_pipeline
 
 def test_list_override():
 

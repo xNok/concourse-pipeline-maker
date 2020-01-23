@@ -5,6 +5,30 @@ import os, shutil, errno
 import logging
 from deepmerge import Merger
 
+
+## Utils processing / transformations
+def use_merge(pipeline, out_directory="./"):
+    """Loop over the merge array and merge together file in order"""
+    logging.info("process_to_be_merged")
+
+    # base pipeline configuration
+    with open(pipeline.p_config["config_file"]) as fp:
+        m_base = yaml.safe_load(fp)
+
+    # loop for the merge
+    for  m in pipeline.p_tools["merge"]:
+        logging.info("merging: " + str(m))
+        with open(m) as fp:
+            m_addon = yaml.safe_load(fp)
+
+        m_base = merge_pipeline(m_base, m_addon)
+
+    pipeline.print_config_file(m_base, out_directory=out_directory)
+
+    return pipeline.p_config["config_file"]
+
+    # define output path
+
 ## Merging mechanism
 def merge_pipeline(b, n):
     """

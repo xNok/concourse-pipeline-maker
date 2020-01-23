@@ -1,7 +1,7 @@
 import yaml
 import logging
 
-from .merge_pipelines_together import merge_pipeline
+from .use_merge import merge_pipeline
 
 def use_resources_file(pipeline, out_directory="./"):
 

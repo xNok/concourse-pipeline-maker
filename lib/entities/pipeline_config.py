@@ -1,14 +1,9 @@
 # -*- coding: utf-8 -*-
-import os, shutil, errno, copy
+import os, copy
 import yaml
-import logging
-import tempfile
-import fileinput
-from datetime import datetime
-import re
 
 ## Dependences
-from ..use_cases.merge_pipelines_together import merge_pipeline
+from ..use_cases.use_merge                import use_merge
 from ..use_cases.use_resources_file       import use_resources_file
 from ..use_cases.use_partials             import use_partials
 
@@ -72,7 +67,7 @@ class PipelineConfig(object):
         ## Merging -> modify the pipeline config
         if self.get("merge"):
             logging.debug("merge: " + str(self.get("merge")))
-            self.process_to_be_merged(out_directory=out_directory)
+            use_merge(self, out_directory=out_directory)
 
         ## Resources -> Merge the new ressources if needed
         if self.get("resources_file"):
@@ -106,28 +101,6 @@ class PipelineConfig(object):
 
         return self.p_config
     
-    ## Utils processing / transformations
-    def process_to_be_merged(self, out_directory="./"):
-        """Loop over the merge array and merge together file in order"""
-        logging.info("process_to_be_merged")
-
-        # base pipeline configuration
-        with open(self.p_config["config_file"]) as fp:
-            m_base = yaml.safe_load(fp)
-
-        # loop for the merge
-        for  m in self.p_tools["merge"]:
-            logging.info("merging: " + str(m))
-            with open(m) as fp:
-                m_addon = yaml.safe_load(fp)
- 
-            m_base = merge_pipeline(m_base, m_addon)
-
-        self.print_config_file(m_base, out_directory=out_directory)
-
-        return self.p_config["config_file"]
-
-        # define output path
     
     def print_config_file(self, source, out_directory="./"):
         out_path = out_directory +'/config_files/' + self.p_config["name"] + ".yml"
@@ -141,7 +114,6 @@ class PipelineConfig(object):
         self.p_config["config_file"] = out_path
 
         return out_path
-
 
     # change the config object
     def set(self, key, value):
@@ -193,22 +165,3 @@ class PipelineConfig(object):
                 r = r + _r
             
         return r
-
-    # merge operation ca require temporary copy not to change the original file
-    def create_temporary_copy(self, path):
-        temp_dir = tempfile.gettempdir()
-        temp_path = os.path.join(temp_dir, str(datetime.timestamp(datetime.now())) + "-" + os.path.basename(path))
-        shutil.copy2(path, temp_path)
-        return temp_path
-
-    # do inplace replace in a configfile
-    def replace_config_with(self, config_file, to_replace={}):
-
-        config_file = self.create_temporary_copy(config_file)
-        with fileinput.FileInput(config_file, inplace=True) as file:
-            to_replace = dict((re.escape("((" + k + "))"), v) for k, v in to_replace.items())
-            pattern = re.compile("|".join(to_replace.keys()))
-            for line in file:
-                print(pattern.sub(lambda m: to_replace[re.escape(m.group(0))], line))
-
-        return config_file

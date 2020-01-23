@@ -135,7 +135,6 @@ def run(cli_args):
     # II.3. Read the configuration for each pipeline
     print(tag.info, "%s Pipelines found" % len(pipelinemanifest["pipelines"]))
 
-
     loop = asyncio.new_event_loop()
     pipelines_file = loop.run_until_complete(
         make_pipelines_loop(loop, cli_args, pipelinemanifest, template_configs, space_config)
