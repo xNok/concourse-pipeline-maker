@@ -24,7 +24,7 @@ def generate_cli(pipeline, out_directory="./", ext="cmd"):
     pipeline.p_tools["cli"] = fly
 
     # Create output dir
-    out_directory = out_directory + '/set-pipeline/'
+    out_directory = './set-pipelines/'
     if not os.path.exists(out_directory):
         os.mkdir(out_directory)
 

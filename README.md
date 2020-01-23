@@ -23,11 +23,14 @@ Additionally, it provide feature to improve the maintainability of your pipeline
 CONCOURSE PIPELINE MAKER
 
 Usage:
-  cpm [--ifile <inputfile>] [--ofile <outputfile>]
-    [-p <text_to_search:replacement_text>...] [options]
-  cpm <pipeline_name>... [--ifile <inputfile>] [--ofile <outputfile>]
-    [-p <text_to_search:replacement_text>...] [options]
+  cpm find -i <inputfile> [-rv]
+  cpm [options]
+  cpm <pipeline_name>... [options]
   cpm -h | --help
+
+Find Options:
+  -r, --resources                           Extract all resource, when using cpm find
+  -v, --vars                                Extract all variables, when using cpm find
 
 Options:
   -i <inputfile>, --ifile <inputfile>       Path to the pipeline manifest. [default: pipelinemanifest.json]
@@ -95,7 +98,7 @@ Is translated into a JSON object as follow:
 
 ## More things you can do with cpm
 
-### template
+### Template = reuse pipleline configuration
 
 #### Example of configuration template
 
@@ -133,7 +136,7 @@ This configuration create a ppeline called `Test` using the confuguration from t
 
 ```
 
-### merge
+### Merge = override or combine pipelines
 
 This configuration will create a ppeline called `Test` by merging the files:
   * path/to/pipeline/buid_it.yml
@@ -162,7 +165,7 @@ This configuration will create a ppeline called `Test` by merging the files:
 
 ```
 
-### partials
+### Partials = Building more Atomic pipleines
 
 #### Example of configuration with Partials
 
@@ -248,6 +251,13 @@ This configuration will create a ppeline called `Test` by merging the files:
 ```
 
 
+
+
+## Helper `cpm find`
+
+This command line help you analyse an existing pipeline, for instance:
+
+* Extract all variables, usefull to make sure you defined all the param in your variable file
 
 ## Use case of cpm
 

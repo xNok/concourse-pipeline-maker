@@ -10,7 +10,7 @@ deps = [
 ]
 
 setup(name='cpm',
-      version='1.4.0',
+      version='1.5.0',
       description='Generate pipelines_file to be used with concourse/concourse-pipeline-resource',
       author='Alexandre Couedelo',
       author_email='alexandre.couedelo@desjardins.com',

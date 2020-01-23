@@ -4,11 +4,14 @@
 CONCOURSE PIPELINE MAKER
 
 Usage:
-  cpm [--ifile <inputfile>] [--ofile <outputfile>]
-    [-p <text_to_search:replacement_text>...] [options]
-  cpm <pipeline_name>... [--ifile <inputfile>] [--ofile <outputfile>]
-    [-p <text_to_search:replacement_text>...] [options]
+  cpm find -i <inputfile> [-rv]
+  cpm [options]
+  cpm <pipeline_name>... [options]
   cpm -h | --help
+
+Find Options:
+  -r, --resources                           Extract all resource, when using cpm find
+  -v, --vars                                Extract all variables, when using cpm find
 
 Options:
   -i <inputfile>, --ifile <inputfile>       Path to the pipeline manifest. [default: pipelinemanifest.json]
@@ -34,6 +37,7 @@ import logging
 # Generer le fichier de configuration des pipelines
 from lib.entities.pipeline_config import PipelineConfig
 from lib.use_cases.create_fly_cmd import generate_cli
+from lib.use_cases.find_params    import find_params
 
 from pathlib import Path
 import yaml, json
@@ -64,18 +68,36 @@ def main():
     {tag} Use {color} cpm --it {reset} to activate the interactive guide"
     """.format(tag=tag.info,color=fg.green,reset=ft.reset,))
 
-    rc_file = ".cpmrc"
-    cli_args_rc = {}
-    if os.path.exists(rc_file):
-        print(tag.info, "Loading runtime config from .cpmrc file", ft.reset)
-        with open(rc_file) as f:
-            cli_args_rc = json.load(f)
+    if cli_args["find"]:
+        find(cli_args)
     else:
-        print(tag.info, "Locally you can use " + fg.green + "a .cpmrc file" + ft.reset + "to avoide typing cpm flag every time")
 
-    cli_args = always_merger.merge(cli_args, cli_args_rc)
+        rc_file = ".cpmrc"
+        cli_args_rc = {}
+        if os.path.exists(rc_file):
+            print(tag.info, "Loading runtime config from .cpmrc file", ft.reset)
+            with open(rc_file) as f:
+                cli_args_rc = json.load(f)
+        else:
+            print(tag.info, "Locally you can use " + fg.green + "a .cpmrc file" + ft.reset + "to avoide typing cpm flag every time")
 
-    run(cli_args)
+        cli_args = always_merger.merge(cli_args, cli_args_rc)
+
+        if cli_args["--debug"]:
+            print("")
+            print("This is what we gonna do:")
+            print(json.dumps(cli_args, sort_keys=True, indent=4))
+            print("")
+
+        run(cli_args)
+
+def find(cli_args):
+
+    ifile = cli_args["--ifile"]
+
+    if cli_args["--resources"]:
+        print(f"{tag.info} Searching params in {fg.green} {ifile} {ft.reset}.")
+        print(find_params(cli_args["--ifile"]))
 
 def run(cli_args):
 
@@ -121,11 +143,6 @@ def run(cli_args):
         elif file_extension == ".yml":
             pipelinemanifest = yaml.safe_load(f)
 
-    print("")
-    print("This is what we gonna do:")
-    print(json.dumps(cli_args, sort_keys=True, indent=4))
-    print("")
-
     print(ft.underline + bg.green + fg.white, "Processing pipeline manifest ...  ",ft.reset)
     print("")
 
@@ -149,7 +166,7 @@ def run(cli_args):
     if not cli_args["--cli"]:
         print(tag.info, "Use the flag " + fg.green + "--cli" + ft.reset + " to generate executable file to generate pipeline")
     else:
-        print(tag.info, "Executable file have been generated, see in folder: " + fg.green + "fly_cli/" + ft.reset)
+        print(tag.info, "Executable file have been generated, see in folder: " + fg.green + "set-pipelines/" + ft.reset)
 
     if not cli_args["--copy"]:
         print(tag.info, "Use the flag " + fg.green + "--copy" + ft.reset + " to copy all necessary files in " + cli_args["--ofile"])
