@@ -25,7 +25,6 @@ def use_partials(pipeline, out_directory="./"):
 
     return pipeline.p_config["config_file"], pipeline.p_tools["merge"]
 
-
 # merge operation ca require temporary copy not to change the original file
 def create_temporary_copy(path):
     """Create a temporary copy of a file"""

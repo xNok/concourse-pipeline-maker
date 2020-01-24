@@ -34,8 +34,9 @@ def use_resources_file(pipeline, out_directory="./"):
 
     # Which resources do we need ?
     with open(pipeline.get("config_file")) as f:
+        config_file = yaml.safe_load(f)
 
-
+    with open(pipeline.get("config_file")) as f:
         result = [i for i in
             (
                 find_resource(resources, line.lower()) for line in f.readlines()
@@ -44,12 +45,18 @@ def use_resources_file(pipeline, out_directory="./"):
 
     # keep only what we need
     resources_file["resources"]      = [r for r in resources_file["resources"] if r["name"] in result]
-    resources_type                   = set([r["type"] for r in resources_file["resources"]])
+    resource_types                   = [r["type"] for r in resources_file["resources"]]
+    
+    if "resources" in config_file:
+        resource_types += [r["type"] for r in config_file["resources"]]
+
+    resource_types = set(resource_types)
+
     if "resource_types" in resources_file:
-        resources_file["resource_types"] = [r for r in resources_file["resource_types"] if r["name"] in resources_type ]
+        resources_file["resource_types"] = [r for r in resources_file["resource_types"] if r["name"] in resource_types ]
 
     logging.debug("resources: " + str(resources))
-    logging.debug("resource_types: " + str(resources_type))
+    logging.debug("resource_types: " + str(resource_types))
 
     with open(pipeline.p_config["config_file"]) as fp:
         config_file = yaml.safe_load(fp)
