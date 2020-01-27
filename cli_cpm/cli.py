@@ -5,13 +5,9 @@ CONCOURSE PIPELINE MAKER
 
 Usage:
   cpm find -i <inputfile> [-rv]
-  cpm [options]
+  cpm [-i <inputfile>] [options]
   cpm <pipeline_name>... [options]
   cpm -h | --help
-
-Find Options:
-  -r, --resources                           Extract all resource, when using cpm find
-  -v, --vars                                Extract all variables, when using cpm find
 
 Options:
   -i <inputfile>, --ifile <inputfile>       Path to the pipeline manifest. [default: pipelinemanifest.json]
@@ -22,8 +18,12 @@ Options:
   -x <cli_ext>, --cli <cli_ext>             Generate the Fly command line for each pipeline [default: cmd]
   Options-Flags:
   --copy                                    Systematically copy the pipeline in the output directory.
-  --debug                                   Set the log level to debug
+  -d, --debug                               Set the log level to debug
   -h, --help                                Show the help screen.
+
+Find Options:
+  -r, --resources                           Extract all resource, when using cpm find
+  -v, --vars                                Extract all variables, when using cpm find
 """
 
 # Utilitaire pour gérer les commande lines
