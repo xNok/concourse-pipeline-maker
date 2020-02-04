@@ -48,7 +48,7 @@ def use_resources_file(pipeline, out_directory="./"):
     resource_types                   = [r["type"] for r in resources_file["resources"]]
     
     if "resources" in config_file:
-        resource_types += [r["type"] for r in config_file["resources"]]
+        resource_types += [r["type"] for r in config_file["resources"] if "type" in r]
 
     resource_types = set(resource_types)
 
