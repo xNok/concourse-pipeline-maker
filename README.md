@@ -98,7 +98,7 @@ Is translated into a JSON object as follow:
 
 ## More things you can do with cpm
 
-### Template = reuse pipleline configuration
+### Template = reuse pipeline configuration
 
 #### Example of configuration template
 
@@ -265,9 +265,9 @@ This configuration will create a ppeline called `Test` by merging the files:
 }
 ```
 
-### resources
+### Resources = manage resources in a separate file
 
-Ressource are often the sane accross your pipelines, therefore it would be nice to reduce duplication and define them ina single file. However not every ressource should be added to every pipelines. The `resources_file` or `-r` flag let you declare a file to be merge in your pipeline, but unused *resources* and *resource_types* will be removed.
+Ressource are often the same accross multiple pipelines, therefore it would be nice to reduce duplication and define them in a single file. However, not every ressource should be added to every pipelines. The `resources_file` or `-r` flag let you declare a file to be merge in your pipeline, but unused *resources* and *resource_types* will be ignored.
 
 #### Example of configuration with Resources
 
@@ -292,10 +292,7 @@ This configuration will create a ppeline called `Test` by merging the files:
 }
 ```
 
-
-
-
-## Helper `cpm find`
+## Helper `cpm find` (Beta)
 
 This command line help you analyse an existing pipeline, for instance:
 
