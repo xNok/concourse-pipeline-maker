@@ -1,0 +1,7 @@
+template2:
+  -p: Test 1
+  -c: ./pipelines_assets/pipeline.yml
+  -l: ./pipelines_assets/vars-template.yml
+  -v:
+    test: 12
+    tests: 22

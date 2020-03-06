@@ -154,3 +154,16 @@ class Test:
         pipeline_to_expect   = manifest["tmpdir"].join('./pipelines_validation/pipelines_files/config_files/Test 4.yml')
         assert os.path.isfile(pipeline_to_validate)
         assert pipeline_to_validate.read() == pipeline_to_expect.read()
+
+    @pytest.mark.parametrize("manifest", [("test_adv_template_file")], indirect=True)
+    def test_adv_resources(self, tmpdir, manifest):
+        """
+        Given fly cli arguments, generate: 
+        1. pipelinemanifest.yml
+        """
+
+        cpm(self.cli_args)
+
+        assert os.path.isfile(manifest["generated"])
+        #assert filecmp.cmp(manifest, manifest_validation)
+        assert manifest["generated"].read() == manifest["expected"].read()

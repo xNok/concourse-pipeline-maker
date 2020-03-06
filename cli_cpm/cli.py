@@ -35,9 +35,10 @@ from cli_cpm.h_colors import *
 import logging
 
 # Generer le fichier de configuration des pipelines
-from lib.entities.pipeline_config import PipelineConfig
-from lib.use_cases.create_fly_cmd import generate_cli
-from lib.use_cases.find_params    import find_params
+from lib.entities.pipeline_config      import PipelineConfig
+from lib.use_cases.create_fly_cmd      import generate_cli
+from lib.use_cases.find_params         import find_params
+from lib.use_cases.use_template_file   import get_templates_from_file
 
 from pathlib import Path
 import yaml, json
@@ -198,6 +199,13 @@ def make_configs(pipelinemanifest):
 
     # II.2. Read the configuration for the templates
     template_configs = {}
+
+    if "templates_file" in pipelinemanifest:
+        pipelinemanifest["templates"] = dict(
+            get_templates_from_file(pipelinemanifest["templates_file"]),
+            **pipelinemanifest["templates"]
+        )
+    
     if "templates" in pipelinemanifest:
         print(tag.info, "%s Templates found" % len(pipelinemanifest["templates"]))
         print(", ".join(pipelinemanifest["templates"].keys()))
