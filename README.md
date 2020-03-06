@@ -136,6 +136,48 @@ This configuration create a ppeline called `Test` using the confuguration from t
 
 ```
 
+#### Using a seperate file for templates
+
+Alternatively you can use a separate file for your templates. The previous example becomes:
+
+```json
+{
+  "configs": {
+    "-t": "team",
+    "-l": "./pipelines_assets/vars-configs.yml",
+    "-v": {
+      "config": 1
+    }
+  },
+  "templates_file": "path/to/template_file.json",
+  "pipelines": [
+    {
+      "-p": "Test",
+      "-tpl": "template",
+      "-v": {
+        "test": 7
+      }
+    }
+  ]
+}
+
+```
+
+templates_file.json
+
+```json
+{
+    "template": {
+      "-c": "./pipelines_assets/pipeline.yml",
+      "-l": "./pipelines_assets/vars-template.yml",
+      "-v": {
+        "test": 1,
+        "tests": 2
+      }
+    }
+  }
+```
+
 ### Merge = override or combine pipelines
 
 This configuration will create a ppeline called `Test` by merging the files:
