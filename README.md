@@ -33,7 +33,7 @@ Find Options:
   -v, --vars                                Extract all variables, when using cpm find
 
 Options:
-  -i <inputfile>, --ifile <inputfile>       Path to the pipeline manifest. [default: pipelinemanifest.json]
+  -i <inputfile>, --ifile <inputfile>       Path to the pipeline manifest. [default: pipeline-manifest.yml]
   -o <outputfile>, --ofile <outputfile>     Path to the output folder. [default: ./pipelines_files]
   -p <text_to_search:replacement_text>      Search and replace operation applied before procssing the pipeline manifest.
                                             Very usefull when working locally.
@@ -45,14 +45,20 @@ Options:
   -h, --help                                Show the help screen.
 ```
 
-## Define a pipeline configuration
+## Install
 
-`cpm` uses a manifest called `pipelinemanifest.json` (by default, yaml format is also supported). This manifest contain the `fly set-pipeline` parameters for each pipeline to be set.
+```bash
+pip install git+[REPO_URL]
+```
+
+## The basis
+
+`cpm` uses a manifest called `pipeline-manifest.yml` to store `fly set-pipeline` parameters for each pipeline to be set.
 
 For instance:
 
 ```sh
-fly set-pipeline -t achat \
+fly set-pipeline -t my-team \
   -p service-dummy \
   -c ./pipelines/services-pipeline.yml \
   --load-vars-from ./vars/vars-dev.yml \
@@ -60,122 +66,123 @@ fly set-pipeline -t achat \
   --var "repo_id=service-dummy"
 ```
 
-Is translated into a JSON object as follow:
+Is translated into a YAML Configuration as follow:
 
-```json
-{
-  "configs": {},
-  "templates": {},
-  "pipelines":[
-    {"-p": "service-dummy",
-      "-c": "pipelines/services-pipeline.yml",
-      "load-vars-from": "vars/vars-dev.yml",
-      "var": {"artifact_id": "service-dummy", "repo_id": "service-dummy"}
-    }
-  ]
-}
+```yml
+pipelines:
+- -p: service-dummy
+  -t: my-team
+  -c: pipelines/services-pipeline.yml
+  load-vars-from: vars/vars-dev.yml
+  var:
+    artifact_id: service-dummy
+    repo_id: service-dummy
 ```
 
-* The `configs` section may be use to define configuration that will be applied to every the pipeline
-* The `template`section may be use to create reusable configuration. Later you can apply it by using the key `-tpl` ot `template` in your pipeline configuration
-* The `pipelines` section define the individual configuration for each pipeline
+
+*The `pipelines` section* in `pipeline-manifest.yml` define the individual configuration for each pipeline
+
+## Configuration section
+
+*The `configs` section* in `pipeline-manifest.yml` may be use to define configuration that will be applied to every pipelines
+
+For instance this is equal to the privious exemple:
+
+```yml
+configs:
+  -t: my-team
+  load-vars-from: vars/vars-dev.yml
+
+pipelines:
+- -p: service-dummy
+  -c: pipelines/services-pipeline.yml
+  var:
+    artifact_id: service-dummy
+    repo_id: service-dummy
+```
+
 
 ### Valide pipeline configuration
 
-* Arguments of `fly set_pipeline`: 
+* Arguments of `fly set_pipeline`:
   * `-t`, `team`: team / target
   * `pipeline`, `-p`: pipeline name (string)
   * `config`, `-c`: configurqation file for the pipeline (string)
   * `load-vars-from`, `-l`: variables file(s) (string or array)
   * `var`, `-v`: variables (JSON object)
 
-* Argument de templating
+* Arguments for configuration template:
     * `-tpl`, `template`: template to be use as a base for this pipeline
 
-* Argument de fusion de pipeline
+_See More things you can do with cpm_ to learn how to use templates
+
+* Argument for merging pipelines:
     * `-m`, `merge`: yaml file(s) to be merge together in order (string or array)
     * `patials`: if provide folder name in `config`, `-c`, then you can list all the files you want to merge together from that folder
 
+_See More things you can do with cpm_ to learn how to use merging pipelines
+
 ## More things you can do with cpm
 
-### Template = reuse pipeline configuration
+### Templates = reuse pipeline configuration
+
+*The `template`section* may be use to create reusable configuration. Later you can apply it by using the key `-tpl` ot `template` in your pipeline configuration
 
 #### Example of configuration template
 
 This configuration create a ppeline called `Test` using the confuguration from the template called `template`
 
-```json
-{
-  "configs": {
-    "-t": "team",
-    "-l": "./pipelines_assets/vars-configs.yml",
-    "-v": {
-      "config": 1
-    }
-  },
-  "templates": {
-    "template": {
-      "-c": "./pipelines_assets/pipeline.yml",
-      "-l": "./pipelines_assets/vars-template.yml",
-      "-v": {
-        "test": 1,
-        "tests": 2
-      }
-    }
-  },
-  "pipelines": [
-    {
-      "-p": "Test",
-      "-tpl": "template",
-      "-v": {
-        "test": 7
-      }
-    }
-  ]
-}
+```yml
+configs:
+  -t: team
+  -l: ./pipelines_assets/vars-configs.yml
+  -v:
+    config: 1
 
+templates:
+  template-foo:
+    -c: ./pipelines_assets/pipeline.yml
+    -l: ./pipelines_assets/vars-template.yml
+    -v:
+      test: 1
+
+pipelines:
+- -p: Test
+  -tpl: template-foo
+  -v:
+    test: 7
 ```
 
-#### Using a seperate file for templates
+#### Use a seperate file for templates
 
 Alternatively you can use a separate file for your templates. The previous example becomes:
 
-```json
-{
-  "configs": {
-    "-t": "team",
-    "-l": "./pipelines_assets/vars-configs.yml",
-    "-v": {
-      "config": 1
-    }
-  },
-  "templates_file": "path/to/template_file.json",
-  "pipelines": [
-    {
-      "-p": "Test",
-      "-tpl": "template",
-      "-v": {
-        "test": 7
-      }
-    }
-  ]
-}
+`pipeline-manifest.yml`:
 
+```yaml
+configs:
+  -t: team
+  -l: ./pipelines_assets/vars-configs.yml
+  -v:
+    config: 1
+
+templates_file: path/to/template_file.yml
+
+pipelines:
+- -p: Test
+  -tpl: template-foo
+  -v:
+    test: 7
 ```
 
-templates_file.json
+`templates_file.yml`:
 
-```json
-{
-    "template": {
-      "-c": "./pipelines_assets/pipeline.yml",
-      "-l": "./pipelines_assets/vars-template.yml",
-      "-v": {
-        "test": 1,
-        "tests": 2
-      }
-    }
-  }
+```yaml
+template-foo:
+  -c: ./pipelines_assets/pipeline.yml
+  -l: ./pipelines_assets/vars-template.yml
+  -v:
+    test: 1
 ```
 
 ### Merge = override or combine pipelines
@@ -185,25 +192,19 @@ This configuration will create a ppeline called `Test` by merging the files:
   * path/to/pipeline/test_it.yml
   * path/to/pipeline/ship_it.yml
 
-```json
-{
-  "configs": {
-    "-t": "team",
-    "-l": "./pipelines_assets/vars-configs.yml",
-  },
-  "templates": {},
-  "pipelines": [
-    {
-      "-p": "Test",
-      "-tpl": "template",
-      "-c": "path/to/pipeline/buid_it.yml",
-      "-m": [
-        "path/to/pipeline/test_it.yml",
-        "path/to/pipeline/ship_it.yml"
-      ]
-    }
-  ]
-}
+```yaml
+
+configs:
+  -t: team
+  -l: ./pipelines_assets/vars-configs.yml
+
+pipelines:
+  - -p: Test
+    -tpl: template
+    -c: path/to/pipeline/buid_it.yml
+    -m:
+      path/to/pipeline/test_it.yml
+      path/to/pipeline/ship_it.yml
 
 ```
 
@@ -216,24 +217,16 @@ This configuration will create a ppeline called `Test` by merging the files:
   * path/to/pipeline/folder/test_it.yml
   * path/to/pipeline/folder/ship_it.yml
 
-```json
-{
-  "configs": {
-    "-t": "team"
-  },
-  "templates": {},
-  "pipelines": [
-    {
-      "-p": "Test",
-      "-c": "path/to/pipeline/folder/",
-      "partials": [
-        "buid_it",
-        "test_it",
-        "ship_it"
-      ]
-    }
-  ]
-}
+```yml
+configs:
+  -t: team
+pipelines:
+  - -p: Test
+    -c: path/to/pipeline/folder/
+    partials:
+    - buid_it
+    - test_it
+    - ship_it
 ```
 
 #### Example of configuration with Partials and inplace replace
@@ -244,52 +237,40 @@ This configuration will create a ppeline called `Test` by merging the files:
   * path/to/pipeline/folder/ship_it.yml and replace **((var))** by `foo`
   * path/to/pipeline/folder/ship_it.yml and replace **((var))** by `bar`
 
-```json
-{
-  "configs": {
-    "-t": "team"
-  },
-  "templates": {},
-  "pipelines": [
-    {
-      "-p": "Test",
-      "-c": "path/to/pipeline/folder/",
-      "partials": [
-        "buid_it",
-        "test_it",
-        {"config_file": "ship_it", "with": { "var": "foo"}},
-        {"config_file": "ship_it", "with": { "var": "bar"}}
-      ]
-    }
-  ]
-}
+```yaml
+configs:
+  -t: team
+pipelines:
+  - -p: Test
+    -c: path/to/pipeline/folder/
+    partials:
+    - buid_it
+    - test_it
+    - config_file: ship_it
+      with: { "var": "bar" }
+    - config_file: ship_it
+      with: { "var": "foo" }
 ```
 
 ### Resources = manage resources in a separate file
 
 Ressource are often the same accross multiple pipelines, therefore it would be nice to reduce duplication and define them in a single file. However, not every ressource should be added to every pipelines. The `resources_file` or `-r` flag let you declare a file to be merge in your pipeline, but unused *resources* and *resource_types* will be ignored.
 
-#### Example of configuration with Resources
+#### Example of configuration with Resources files
 
 This configuration will create a ppeline called `Test` by merging the files:
 * path/to/pipeline/buid_it.yml
 * path/to/resources/ressource.yml (but removes *resources* and *resource_types* not in path/to/pipeline/buid_it.yml)
 
 
-```json
-{
-  "configs": {
-    "-t": "team",
-    "-r": "path/to/resources/ressource.yml",
-  },
-  "templates": {},
-  "pipelines": [
-    {
-      "-p": "Test",
-      "-c": "path/to/pipeline/buid_it.yml"
-    }
-  ]
-}
+```yml
+configs:
+  -t: team
+  -r:
+  - path/to/resource_file.yml
+pipelines:
+  - -p: Test
+    -c: path/to/pipeline/folder/build_it.yml
 ```
 
 ## Helper `cpm find` (Beta)
@@ -315,7 +296,6 @@ cpm --copy
 # My pipeline are in an other location and I use a generic name for it
 cpm -p alias:path/to/the/folder
 ```
-
 
 ## Reusable commandline configuration (.cpmrc)
 

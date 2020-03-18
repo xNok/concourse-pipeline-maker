@@ -10,7 +10,7 @@ Usage:
   cpm -h | --help
 
 Options:
-  -i <inputfile>, --ifile <inputfile>       Path to the pipeline manifest. [default: pipelinemanifest.json]
+  -i <inputfile>, --ifile <inputfile>       Path to the pipeline manifest. [default: pipeline-manifest.yml]
   -o <outputfile>, --ofile <outputfile>     Path to the output folder. [default: ./pipelines_files]
   -p <text_to_search:replacement_text>      Search and replace operation applied before procssing the pipeline manifest.
                                             Very usefull when working locally.
@@ -131,18 +131,21 @@ def run(cli_args):
     # I Parsing the pipeline manifest
     print("Processing %s" % str(cli_args["--ifile"]))
 
+    ## Find en replace string before processing
     if cli_args["-p"]:
-        with fileinput.FileInput(cli_args["--ifile"], inplace=True) as file:
-            for line in file:
-                for p in cli_args["-p"]:
-                    print(line.replace(p.split(":")[0], p.split(":")[1]), end='')
+        make_preprocessing_replacement(cli_args["--ifile"], cli_args["-p"])
 
+    # read pipeline-manifest
     with open(cli_args["--ifile"]) as f:
         filename, file_extension = os.path.splitext(cli_args["--ifile"])
         if file_extension == ".json":
             pipelinemanifest = json.load(f)
         elif file_extension == ".yml":
             pipelinemanifest = yaml.safe_load(f)
+
+    ## Find en replace string before processing template_file
+    if "templates_file" in pipelinemanifest and cli_args["-p"]:
+        make_preprocessing_replacement(pipelinemanifest["templates_file"], cli_args["-p"])
 
     print(ft.underline + bg.green + fg.white, "Processing pipeline manifest ...  ",ft.reset)
     print("")
@@ -153,12 +156,14 @@ def run(cli_args):
     # II.3. Read the configuration for each pipeline
     print(tag.info, "%s Pipelines found" % len(pipelinemanifest["pipelines"]))
 
+    # Create a state machine to manage the pipeline generation
     loop = asyncio.new_event_loop()
     pipelines_file = loop.run_until_complete(
         make_pipelines_loop(loop, cli_args, pipelinemanifest, template_configs, space_config)
     )
     loop.close()
   
+    # COMMUNICATION
     print("")
     print(ft.underline + bg.green + fg.white + "  Le Ficher pipelinemanifest.yml est prêt  " + ft.reset)
     print(fg.green + "Go check it out: " + fg.yellow + cli_args["--ofile"] + '/pipelinemanifest.yml' + ft.reset)
@@ -175,15 +180,16 @@ def run(cli_args):
         print(tag.info, "All files have been copied, see in folder:" + fg.green + cli_args["--ofile"] + ft.reset)
 
     #4. Generate the pipelines_file
-    # Ecrire le ficher des pipelines
     with open(cli_args["--ofile"] + '/pipelinemanifest.yml', 'w') as outfile:
         yaml.safe_dump(pipelines_file, outfile, default_flow_style=False)
 
+    #5. Postprocssing Find en replace back
     if cli_args["-p"]:
-        with fileinput.FileInput([cli_args["--ifile"],cli_args["--ofile"]+'/pipelinemanifest.yml'] , inplace=True) as file:
-            for line in file:
-                for p in cli_args["-p"]:
-                    print(line.replace(p.split(":")[1], p.split(":")[0]), end='')
+        make_postprocessing_replacement(cli_args["--ifile"], cli_args["-p"])
+        make_postprocessing_replacement(cli_args["--ofile"]+'/pipelinemanifest.yml', cli_args["-p"])
+
+        if "templates_file" in pipelinemanifest:
+            make_postprocessing_replacement(pipelinemanifest['templates_file'], cli_args["-p"])
 
 
 def make_configs(pipelinemanifest):
@@ -201,6 +207,7 @@ def make_configs(pipelinemanifest):
     template_configs = {}
 
     if "templates_file" in pipelinemanifest:
+
         pipelinemanifest["templates"] = dict(
             get_templates_from_file(pipelinemanifest["templates_file"]),
             **pipelinemanifest["templates"]
@@ -216,6 +223,20 @@ def make_configs(pipelinemanifest):
         print(tag.info, "Use a section " + fg.green + "templates" + ft.reset + " in pipelinemanifest.json to create resuable configuration")
 
     return space_config, template_configs
+
+def make_preprocessing_replacement(file, replacement):
+    """Search and replace in file"""
+    with fileinput.FileInput(file, inplace=True) as file:
+        for line in file:
+            for p in replacement:
+                print(line.replace(p.split(":")[0], p.split(":")[1]), end='')
+
+def make_postprocessing_replacement(file, replacement):
+    """Search and replace back in file"""
+    with fileinput.FileInput(file , inplace=True) as file:
+        for line in file:
+            for p in replacement:
+                print(line.replace(p.split(":")[1], p.split(":")[0]), end='')
 
 async def make_pipelines_loop(loop, cli_args, pipelinemanifest, template_configs, space_config):
     added_tasks = []
